@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sistema de Turnos</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+ <h1>📅 Sistema de Turnos</h1>
+
+<button type="button" onclick="logout()">Cerrar sesión</button>
+
+
+<form id="formTurno">
+  <input type="text" id="nombre" placeholder="Nombre" required />
+  <input type="date" id="fecha" required />
+  <input type="time" id="hora" required />
+  <button type="submit">Guardar turno</button>
+</form>
+
+<p id="mensaje"></p>
+
+<script>
+  if (localStorage.getItem("logueado") !== "true") {
+    window.location.href = "index.html";
+  }
+
+  if (localStorage.getItem("rol") !== "user") {
+    alert("Acceso denegado");
+    window.location.href = "index.html";
+  }
+
+  function logout() {
+    localStorage.clear();
+    window.location.href = "index.html";
+  }
+</script>
+
+<script src="turnos.js"></script>
+
+</body>
+</html>
