@@ -1,6 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const { getDB } = require("../db");
+const bcrypt = require("bcrypt");
+
+const SALT_ROUNDS = 10;
 
 /* =========================
    REGISTRO
@@ -14,10 +17,11 @@ router.post("/register", async (req, res) => {
 
   try {
     const db = getDB();
+    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
     await db.execute(
       "INSERT INTO usuarios (nombre, email, password, rol, activo) VALUES (?, ?, ?, 'user', true)",
-      [nombre, email, password]
+      [nombre, email, hashedPassword]
     );
 
     res.json({ message: "✅ Usuario registrado correctamente" });
@@ -25,11 +29,10 @@ router.post("/register", async (req, res) => {
     if (error.code === "ER_DUP_ENTRY") {
       return res.status(409).json({ error: "El usuario ya existe" });
     }
-    console.error(error);
+    console.error("Error en registro:", error);
     res.status(500).json({ error: "Error al registrar usuario" });
   }
 });
-
 
 /* =========================
    LOGIN
@@ -39,23 +42,32 @@ router.post("/login", async (req, res) => {
 
   try {
     const db = getDB();
-
     const [rows] = await db.execute(
-      "SELECT id, email, rol FROM usuarios WHERE email = ? AND password = ? AND activo = true",
-      [email, password]
+      "SELECT id, email, password, rol FROM usuarios WHERE email = ? AND activo = true",
+      [email]
     );
 
     if (rows.length === 0) {
       return res.status(401).json({ error: "Credenciales inválidas" });
     }
 
+    const usuario = rows[0];
+    const passwordCorrecta = await bcrypt.compare(password, usuario.password);
+
+    if (!passwordCorrecta) {
+      return res.status(401).json({ error: "Credenciales inválidas" });
+    }
+
     res.json({
-  message: "✅ Login correcto",
-  rol: rows[0].rol,
-});
+      message: "✅ Login correcto",
+      user: {
+        id: usuario.id,
+        rol: usuario.rol
+      }
+    });
 
   } catch (error) {
-    console.error(error);
+    console.error("Error en login:", error);
     res.status(500).json({ error: "Error al iniciar sesión" });
   }
 });
