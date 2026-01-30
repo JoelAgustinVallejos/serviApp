@@ -23,15 +23,18 @@
 </table>
 
 <script>
- if (localStorage.getItem("logueado") !== "true" ||
-    localStorage.getItem("rol") !== "admin") {
-  alert("Acceso denegado");
-  window.location.href = "index.html";
-}
+  // Verificamos la sesión usando el objeto nuevo
+  const datosUsuario = JSON.parse(localStorage.getItem("usuario"));
+
+  // Si no existe el objeto o el rol no es admin (limpiando espacios), fuera.
+  if (!datosUsuario || datosUsuario.rol.trim().toLowerCase() !== "admin") {
+    alert("Acceso denegado: Se requiere cuenta de administrador");
+    window.location.href = "login.html"; // Mejor mandarlo al login que al index
+  }
 
   function logout() {
     localStorage.clear();
-    window.location.href = "index.html";
+    window.location.href = "login.html";
   }
 </script>
 

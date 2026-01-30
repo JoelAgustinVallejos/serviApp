@@ -19,21 +19,44 @@
   <button type="submit">Guardar turno</button>
 </form>
 
+<h3>Mis Turnos Pedidos</h3>
+<table border="1">
+  <thead>
+    <tr>
+      <th>Nombre</th>
+      <th>Fecha</th>
+      <th>Hora</th>
+      <th>Estado</th>
+      <th>Acción</th>
+    </tr>
+  </thead>
+  <tbody id="tablaMisTurnos">
+    </tbody>
+</table>
+
 <p id="mensaje"></p>
 
 <script>
-  if (localStorage.getItem("logueado") !== "true") {
-    window.location.href = "index.html";
-  }
+  // 🛡️ Nueva validación de seguridad
+  const datosUsuario = JSON.parse(localStorage.getItem("usuario"));
 
-  if (localStorage.getItem("rol") !== "user") {
-    alert("Acceso denegado");
-    window.location.href = "index.html";
+  if (!datosUsuario) {
+    window.location.href = "login.html";
+  } else {
+    // Limpiamos el rol por si tiene espacios
+    const rol = datosUsuario.rol ? datosUsuario.rol.trim().toLowerCase() : "";
+    
+    // Si es admin, lo dejamos pasar (un admin también puede pedir turnos)
+    // O si prefieres que solo los 'user' entren, deja solo: if (rol !== "user")
+    if (rol !== "user" && rol !== "admin") {
+      alert("Acceso denegado");
+      window.location.href = "login.html";
+    }
   }
 
   function logout() {
-    localStorage.clear();
-    window.location.href = "index.html";
+    localStorage.removeItem("usuario");
+    window.location.href = "login.html";
   }
 </script>
 

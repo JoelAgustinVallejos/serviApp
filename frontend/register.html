@@ -18,7 +18,7 @@
 
   <p id="mensaje"></p>
 
-  <script>
+<script>
 const form = document.getElementById("registerForm");
 const mensaje = document.getElementById("mensaje");
 
@@ -29,23 +29,29 @@ form.addEventListener("submit", async (e) => {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
 
-  const res = await fetch("http://localhost:3000/users/register", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nombre, email, password })
-  });
+  try {
+    const res = await fetch("http://localhost:3000/users/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nombre, email, password })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if (!res.ok) {
-    mensaje.textContent = data.error;
-    return;
+    if (!res.ok) {
+      mensaje.style.color = "red";
+      mensaje.textContent = data.error;
+      return;
+    }
+
+    // ✅ ÉXITO: Informamos al usuario y lo mandamos al LOGIN
+    alert("¡Registro exitoso! Por favor, inicia sesión.");
+    window.location.href = "login.html";
+
+  } catch (error) {
+    mensaje.style.color = "red";
+    mensaje.textContent = "❌ Error de conexión con el servidor";
   }
-
-  localStorage.setItem("logueado", "true");
-  localStorage.setItem("rol", "user");
-
-  window.location.href = "turnos.html";
 });
 </script>
 
