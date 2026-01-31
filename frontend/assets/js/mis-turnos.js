@@ -1,11 +1,9 @@
 const form = document.getElementById("formTurno");
 const mensaje = document.getElementById("mensaje");
-
 // Seguridad: Si alguien entra a turnos.html sin estar logueado, lo saca de inmediato
 if (!localStorage.getItem("usuario")) {
     window.location.href = "login.html";
 }
-
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 

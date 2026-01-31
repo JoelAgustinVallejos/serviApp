@@ -1,11 +1,18 @@
-node_modules
+# Dependencias
+backend/node_modules/
+node_modules/
+
+# Base de datos persistente (Docker)
+mysql_data/
+
+# Variables de entorno
 .env
-dist
-coverage
+
+# Logs y archivos temporales
+*.log
+npm-debug.log*
 .DS_Store
 
-# Docker
-*.log
-
-# MySQL
-mysql-data
+# Carpetas de cobertura o build (si las tuvieras)
+coverage/
+dist/

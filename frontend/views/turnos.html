@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Mis Turnos</title>
+    <link rel="stylesheet" href="/assets/css/styles.css">
+</head>
+<body>
+    <h1>📅 Pedir Turno</h1>
+    <button type="button" onclick="logout()">Cerrar sesión</button>
+
+    <form id="formTurno">
+        <input type="text" id="nombre" placeholder="Nombre" required />
+        <input type="date" id="fecha" required />
+        <input type="time" id="hora" required />
+        <button type="submit">Guardar turno</button>
+    </form>
+
+    <h3>Mis Turnos Pedidos</h3>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Estado</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody id="tablaMisTurnos"></tbody>
+    </table>
+    <p id="mensaje"></p>
+
+    <script>
+        const datosUsuario = JSON.parse(localStorage.getItem("usuario"));
+        if (!datosUsuario) {
+            window.location.href = "login.html";
+        } else {
+            const rol = datosUsuario.rol ? datosUsuario.rol.trim().toLowerCase() : "";
+            if (rol !== "user" && rol !== "admin") {
+                alert("Acceso denegado");
+                window.location.href = "login.html";
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem("usuario");
+            window.location.href = "index.html";
+        }
+    </script>
+    <script src="/assets/js/turnos.js"></script>
+</body>
+</html>

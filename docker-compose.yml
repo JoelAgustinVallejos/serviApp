@@ -1,28 +1,34 @@
 services:
   backend:
-    build: .
+    build: 
+      context: .
+      dockerfile: backend/Dockerfile
     ports:
       - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/backend/node_modules
     depends_on:
       db:
         condition: service_healthy
-    command: node index.js
 
   db:
     image: mysql:8
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: turnos
+      MYSQL_DATABASE: sistema_turnos # 👈 Cambié "turnos" por "sistema_turnos" para que coincida con tu SQL
     ports:
       - "3306:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - ./backend/database/database.sql:/docker-entrypoint-initdb.d/init.sql
+      - mysql_data:/var/lib/mysql # 👈 ESTA ES LA LÍNEA CLAVE: Crea una carpeta persistente
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
       interval: 5s
       timeout: 5s
       retries: 5
 
+# 👇 ESTO TAMBIÉN ES OBLIGATORIO AL FINAL DEL ARCHIVO
 volumes:
   mysql_data:
