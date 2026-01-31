@@ -13,12 +13,10 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
 
-    // Inicializar datos del panel
     cargarConfiguracion();
     cargarTurnos();
 });
 
-// --- GESTIÓN DE CONFIGURACIÓN DE HORARIOS ---
 
 async function cargarConfiguracion() {
     try {
@@ -27,7 +25,6 @@ async function cargarConfiguracion() {
         
         const config = await res.json();
         
-        // El input type="time" espera formato HH:mm
         document.getElementById("horaInicio").value = config.hora_inicio.slice(0, 5);
         document.getElementById("horaFin").value = config.hora_fin.slice(0, 5);
     } catch (error) {
@@ -45,7 +42,6 @@ async function guardarConfiguracion() {
         return;
     }
 
-    // Validación lógica simple: inicio no puede ser mayor o igual al fin
     if (hora_inicio >= hora_fin) {
         alert("La hora de inicio debe ser menor a la hora de cierre.");
         return;
@@ -71,8 +67,6 @@ async function guardarConfiguracion() {
         msg.innerText = "❌ Error de conexión";
     }
 }
-
-// --- GESTIÓN DE TURNOS ---
 
 async function cargarTurnos() {
     try {

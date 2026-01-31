@@ -5,9 +5,6 @@ const bcrypt = require("bcrypt");
 
 const SALT_ROUNDS = 10;
 
-/* =========================
-   REGISTRO
-========================= */
 router.post("/register", async (req, res) => {
   const { nombre, email, password } = req.body;
 
@@ -34,9 +31,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-/* =========================
-   LOGIN
-========================= */
+
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 

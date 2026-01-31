@@ -42,7 +42,6 @@
                 mensaje.textContent = "Login correcto ✔️";
 
                 setTimeout(() => {
-                    // Redirige a archivos en la misma carpeta 'views'
                     window.location.href = data.user.rol.trim().toLowerCase() === "admin" ? "admin.html" : "turnos.html";
                 }, 1000);
             } catch {

@@ -2,8 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { getDB } = require("../db");
 
-// --- FUNCIONES DE APOYO ---
-// Nota: Ahora las validaciones de rango se hacen dentro del POST para consultar la DB
+
 function validarFormatoFechaHora(fecha, hora) {
     const horaRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
     if (!horaRegex.test(hora)) return "Formato de hora inválido (HH:mm)";
@@ -16,9 +15,6 @@ function validarFormatoFechaHora(fecha, hora) {
     return null;
 }
 
-// --- RUTAS DE ADMINISTRADOR ---
-
-// 🔵 Obtener TODOS los turnos
 router.get("/admin/all", async (req, res) => {
     try {
         const db = getDB();
@@ -30,7 +26,6 @@ router.get("/admin/all", async (req, res) => {
     }
 });
 
-// 🟠 Actualizar estado del turno
 router.patch("/status/:id", async (req, res) => {
     const { id } = req.params;
     const { nuevoEstado } = req.body;
@@ -43,7 +38,6 @@ router.patch("/status/:id", async (req, res) => {
     }
 });
 
-// ⚙️ NUEVO: Obtener la configuración de horario actual
 router.get("/config", async (req, res) => {
     try {
         const db = getDB();
@@ -54,7 +48,6 @@ router.get("/config", async (req, res) => {
     }
 });
 
-// ⚙️ NUEVO: El Admin establece su horario de trabajo
 router.post("/config", async (req, res) => {
     const { hora_inicio, hora_fin } = req.body;
     if (!hora_inicio || !hora_fin) return res.status(400).json({ error: "Faltan horarios" });
@@ -70,8 +63,6 @@ router.post("/config", async (req, res) => {
     }
 });
 
-// --- RUTAS DE USUARIO ---
-
 router.get("/mis-turnos/:id", async (req, res) => {
   const { id } = req.params;
   try {
@@ -83,36 +74,30 @@ router.get("/mis-turnos/:id", async (req, res) => {
   }
 });
 
-// 🟡 Crear nuevo turno (Dinamizado con la configuración del Admin)
 router.post("/", async (req, res) => {
     const { nombre, fecha, hora, usuario_id } = req.body;
     if (!nombre || !fecha || !hora || !usuario_id) return res.status(400).json({ error: "Faltan datos" });
     
-    // Validación básica de formato y fecha futura
     const errorBasico = validarFormatoFechaHora(fecha, hora);
     if (errorBasico) return res.status(400).json({ error: errorBasico });
 
     try {
         const db = getDB();
 
-        // 1️⃣ Consultar horario de trabajo configurado
         const [config] = await db.execute("SELECT hora_inicio, hora_fin FROM configuracion WHERE id = 1");
         const { hora_inicio, hora_fin } = config[0];
 
-        // Validar si la hora está dentro del rango (Compara como strings "HH:mm:ss")
         if (hora < hora_inicio || hora >= hora_fin) {
             return res.status(400).json({ 
                 error: `Horario no disponible. Atendemos de ${hora_inicio.slice(0, 5)} a ${hora_fin.slice(0, 5)} hs.` 
             });
         }
 
-        // 2️⃣ Validar si el horario ya está reservado
         const [ocupado] = await db.execute("SELECT id FROM turnos WHERE fecha = ? AND hora = ?", [fecha, hora]);
         if (ocupado.length > 0) {
             return res.status(409).json({ error: "Este horario ya se encuentra reservado." });
         }
 
-        // 3️⃣ Validar duplicado del mismo usuario
         const [repetido] = await db.execute(
             "SELECT id FROM turnos WHERE usuario_id = ? AND fecha = ? AND hora = ?",
             [usuario_id, fecha, hora]

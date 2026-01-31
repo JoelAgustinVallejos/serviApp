@@ -55,7 +55,6 @@
 </table>
 
 <script>
-  // Verificación de sesión rápida en el HTML
   const datosUsuario = JSON.parse(localStorage.getItem("usuario"));
 
   if (!datosUsuario || datosUsuario.rol.trim().toLowerCase() !== "admin") {

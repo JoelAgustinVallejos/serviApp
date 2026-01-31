@@ -1,8 +1,6 @@
--- 1. Crear Base de Datos
 CREATE DATABASE IF NOT EXISTS turnos;
 USE turnos;
 
--- 2. Tabla de Usuarios
 CREATE TABLE IF NOT EXISTS usuarios (
   id INT AUTO_INCREMENT PRIMARY KEY,
   nombre VARCHAR(100),
@@ -12,7 +10,6 @@ CREATE TABLE IF NOT EXISTS usuarios (
   activo BOOLEAN DEFAULT TRUE
 );
 
--- 3. Tabla de Turnos
 CREATE TABLE IF NOT EXISTS turnos (
   id INT AUTO_INCREMENT PRIMARY KEY,
   nombre VARCHAR(100),
@@ -23,7 +20,6 @@ CREATE TABLE IF NOT EXISTS turnos (
   FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 );
 
--- 4. Tabla de Configuración
 CREATE TABLE IF NOT EXISTS configuracion (
     id INT PRIMARY KEY DEFAULT 1,
     hora_inicio TIME NOT NULL,
@@ -31,14 +27,11 @@ CREATE TABLE IF NOT EXISTS configuracion (
     CONSTRAINT unica_fila CHECK (id = 1)
 );
 
--- ... (tus CREATE TABLE anteriores) ...
-
--- INSERT del Admin con el hash que TU sistema reconoce
+-- INSERT del Admin con el hash que TU sistema reconoce (Email: admin@amdin.com | Password original: admin123)
 INSERT INTO usuarios (nombre, email, password, rol) 
 VALUES ('Admin', 'admin@admin.com', '$2b$10$eC9mzko7OtnmWf742Jwzl.Fl0zcJsRJGBkY4YRzL1bakTIU8ij75K', 'admin')
 ON DUPLICATE KEY UPDATE password = VALUES(password), rol = VALUES(rol);
 
--- Configuración inicial de horarios
 INSERT INTO configuracion (id, hora_inicio, hora_fin) 
 VALUES (1, '09:00:00', '19:00:00')
 ON DUPLICATE KEY UPDATE id=id;

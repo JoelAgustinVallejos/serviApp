@@ -1,25 +1,20 @@
 const form = document.getElementById("formTurno");
 const mensaje = document.getElementById("mensaje");
 
-// 1. Cargar la tabla apenas abre la página
 document.addEventListener("DOMContentLoaded", cargarMisTurnos);
 
-// 2. Función para obtener los turnos del usuario logueado
 async function cargarMisTurnos() {
     const userStorage = JSON.parse(localStorage.getItem("usuario"));
     if (!userStorage) return;
 
     try {
-        // Usamos la ruta de "mis-turnos" pasando el ID del usuario
         const res = await fetch(`http://localhost:3000/appointments/mis-turnos/${userStorage.id}`);
         const turnos = await res.json();
 
-        // Buscamos un contenedor en el HTML para mostrar los turnos
-        // Si no tienes una tabla en turnos.html, te recomiendo agregar un <tbody id="tablaMisTurnos">
         const tabla = document.getElementById("tablaMisTurnos");
         if (!tabla) return; 
 
-        tabla.innerHTML = ""; // Limpiar antes de cargar
+        tabla.innerHTML = ""; 
 
         turnos.forEach(t => {
             tabla.innerHTML += `
@@ -38,7 +33,6 @@ async function cargarMisTurnos() {
     }
 }
 
-// 3. Evento para guardar nuevo turno
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const userStorage = JSON.parse(localStorage.getItem("usuario"));
@@ -70,7 +64,7 @@ form.addEventListener("submit", async (e) => {
         mensaje.style.color = "green";
         mensaje.textContent = "✅ Turno pedido con éxito";
         form.reset();
-        cargarMisTurnos(); // 🔄 Recargamos la tabla para ver el nuevo turno
+        cargarMisTurnos(); 
 
     } catch (error) {
         mensaje.style.color = "red";
@@ -78,7 +72,6 @@ form.addEventListener("submit", async (e) => {
     }
 });
 
-// 4. Función para que el usuario cancele su propio turno
 async function eliminarTurno(id) {
     if (!confirm("¿Deseas cancelar este turno?")) return;
     const userStorage = JSON.parse(localStorage.getItem("usuario"));

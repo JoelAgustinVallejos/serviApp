@@ -17,18 +17,17 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: sistema_turnos # 👈 Cambié "turnos" por "sistema_turnos" para que coincida con tu SQL
+      MYSQL_DATABASE: sistema_turnos 
     ports:
       - "3306:3306"
     volumes:
       - ./backend/database/database.sql:/docker-entrypoint-initdb.d/init.sql
-      - mysql_data:/var/lib/mysql # 👈 ESTA ES LA LÍNEA CLAVE: Crea una carpeta persistente
+      - mysql_data:/var/lib/mysql 
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
       interval: 5s
       timeout: 5s
       retries: 5
 
-# 👇 ESTO TAMBIÉN ES OBLIGATORIO AL FINAL DEL ARCHIVO
 volumes:
   mysql_data:
