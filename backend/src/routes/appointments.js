@@ -3,23 +3,25 @@ const router = express.Router();
 const { getDB } = require("../db");
 
 // --- FUNCIONES DE APOYO ---
-function validarFechaHora(fecha, hora) {
+// Nota: Ahora las validaciones de rango se hacen dentro del POST para consultar la DB
+function validarFormatoFechaHora(fecha, hora) {
     const horaRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
     if (!horaRegex.test(hora)) return "Formato de hora inválido (HH:mm)";
+    
     const ahora = new Date();
     const fechaTurno = new Date(`${fecha}T${hora}:00`);
     if (isNaN(fechaTurno.getTime())) return "Fecha u hora inválida";
     if (fechaTurno <= ahora) return "El turno debe ser en una fecha y hora futura";
+    
     return null;
 }
 
-// --- RUTAS DE ADMINISTRADOR (Van arriba para evitar conflictos) ---
+// --- RUTAS DE ADMINISTRADOR ---
 
-// 🔵 Obtener TODOS los turnos (Para admin.js)
+// 🔵 Obtener TODOS los turnos
 router.get("/admin/all", async (req, res) => {
     try {
         const db = getDB();
-        // Traemos todos los turnos de la base de datos
         const [rows] = await db.execute("SELECT * FROM turnos ORDER BY fecha ASC, hora ASC");
         res.json(rows);
     } catch (error) {
@@ -28,10 +30,10 @@ router.get("/admin/all", async (req, res) => {
     }
 });
 
-// 🟠 Actualizar estado del turno (Confirmar/Cancelar desde Admin)
+// 🟠 Actualizar estado del turno
 router.patch("/status/:id", async (req, res) => {
     const { id } = req.params;
-    const { nuevoEstado } = req.body; // Recibe 'confirmado' o 'cancelado'
+    const { nuevoEstado } = req.body;
     try {
         const db = getDB();
         await db.execute("UPDATE turnos SET estado = ? WHERE id = ?", [nuevoEstado, id]);
@@ -41,9 +43,35 @@ router.patch("/status/:id", async (req, res) => {
     }
 });
 
+// ⚙️ NUEVO: Obtener la configuración de horario actual
+router.get("/config", async (req, res) => {
+    try {
+        const db = getDB();
+        const [rows] = await db.execute("SELECT hora_inicio, hora_fin FROM configuracion WHERE id = 1");
+        res.json(rows[0]);
+    } catch (error) {
+        res.status(500).json({ error: "Error al obtener configuración" });
+    }
+});
+
+// ⚙️ NUEVO: El Admin establece su horario de trabajo
+router.post("/config", async (req, res) => {
+    const { hora_inicio, hora_fin } = req.body;
+    if (!hora_inicio || !hora_fin) return res.status(400).json({ error: "Faltan horarios" });
+    try {
+        const db = getDB();
+        await db.execute(
+            "UPDATE configuracion SET hora_inicio = ?, hora_fin = ? WHERE id = 1",
+            [hora_inicio, hora_fin]
+        );
+        res.json({ message: "✅ Horario de trabajo actualizado" });
+    } catch (error) {
+        res.status(500).json({ error: "Error al guardar configuración" });
+    }
+});
+
 // --- RUTAS DE USUARIO ---
 
-// 🟢 Obtener turnos de un usuario específico
 router.get("/mis-turnos/:id", async (req, res) => {
   const { id } = req.params;
   try {
@@ -55,27 +83,55 @@ router.get("/mis-turnos/:id", async (req, res) => {
   }
 });
 
-// 🟡 Crear nuevo turno
+// 🟡 Crear nuevo turno (Dinamizado con la configuración del Admin)
 router.post("/", async (req, res) => {
     const { nombre, fecha, hora, usuario_id } = req.body;
     if (!nombre || !fecha || !hora || !usuario_id) return res.status(400).json({ error: "Faltan datos" });
     
-    const errorFH = validarFechaHora(fecha, hora);
-    if (errorFH) return res.status(400).json({ error: errorFH });
+    // Validación básica de formato y fecha futura
+    const errorBasico = validarFormatoFechaHora(fecha, hora);
+    if (errorBasico) return res.status(400).json({ error: errorBasico });
 
     try {
         const db = getDB();
+
+        // 1️⃣ Consultar horario de trabajo configurado
+        const [config] = await db.execute("SELECT hora_inicio, hora_fin FROM configuracion WHERE id = 1");
+        const { hora_inicio, hora_fin } = config[0];
+
+        // Validar si la hora está dentro del rango (Compara como strings "HH:mm:ss")
+        if (hora < hora_inicio || hora >= hora_fin) {
+            return res.status(400).json({ 
+                error: `Horario no disponible. Atendemos de ${hora_inicio.slice(0, 5)} a ${hora_fin.slice(0, 5)} hs.` 
+            });
+        }
+
+        // 2️⃣ Validar si el horario ya está reservado
+        const [ocupado] = await db.execute("SELECT id FROM turnos WHERE fecha = ? AND hora = ?", [fecha, hora]);
+        if (ocupado.length > 0) {
+            return res.status(409).json({ error: "Este horario ya se encuentra reservado." });
+        }
+
+        // 3️⃣ Validar duplicado del mismo usuario
+        const [repetido] = await db.execute(
+            "SELECT id FROM turnos WHERE usuario_id = ? AND fecha = ? AND hora = ?",
+            [usuario_id, fecha, hora]
+        );
+        if (repetido.length > 0) {
+            return res.status(409).json({ error: "Ya tienes registrado este turno exactamente." });
+        }
+
         await db.execute(
             "INSERT INTO turnos (nombre, fecha, hora, usuario_id, estado) VALUES (?, ?, ?, ?, 'pendiente')",
             [nombre, fecha, hora, usuario_id]
         );
         res.json({ message: "✅ Turno creado" });
     } catch (error) {
+        console.error("Error al crear turno:", error);
         res.status(500).json({ error: "Error al crear turno" });
     }
 });
 
-// 🔴 Eliminar/Cancelar turno (Funciona para ambos)
 router.delete("/:id", async (req, res) => {
     const { id } = req.params;
     try {

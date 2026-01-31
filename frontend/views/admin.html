@@ -2,34 +2,65 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Panel Admin</title>
+  <title>Panel Admin - Gestión de Turnos</title>
   <link rel="stylesheet" href="/assets/css/styles.css">
+  <style>
+    .config-container {
+      background: #f4f4f4;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      border-left: 5px solid #333;
+    }
+    .config-container h3 { margin-top: 0; }
+    .form-group { margin-bottom: 10px; display: inline-block; margin-right: 20px; }
+    .form-group label { display: block; font-weight: bold; margin-bottom: 5px; }
+    #msgConfig { font-weight: bold; margin-top: 10px; display: block; }
+  </style>
 </head>
 <body>
+
 <h1>🔐 Panel Admin</h1>
 <button onclick="logout()">Cerrar sesión</button>
 
-<table border="1">
+<section class="config-container">
+    <h3>⚙️ Configuración de Jornada Laboral</h3>
+    <div class="form-group">
+        <label for="horaInicio">Hora de Apertura:</label>
+        <input type="time" id="horaInicio">
+    </div>
+    <div class="form-group">
+        <label for="horaFin">Hora de Cierre:</label>
+        <input type="time" id="horaFin">
+    </div>
+    <button onclick="guardarConfiguracion()" style="padding: 8px 15px; cursor: pointer;">Guardar Horario</button>
+    <span id="msgConfig"></span>
+</section>
+
+<hr>
+
+<h3>📅 Agenda de Turnos</h3>
+<table border="1" style="width: 100%; text-align: left; border-collapse: collapse;">
   <thead>
-    <tr>
+    <tr style="background-color: #eee;">
       <th>ID</th>
       <th>Nombre</th>
       <th>Fecha</th>
       <th>Hora</th>
-      <th>Acción</th>
+      <th>Estado</th>
+      <th>Acciones</th>
     </tr>
   </thead>
   <tbody id="tablaTurnos"></tbody>
 </table>
 
 <script>
-  // Verificamos la sesión usando el objeto nuevo
+  // Verificación de sesión rápida en el HTML
   const datosUsuario = JSON.parse(localStorage.getItem("usuario"));
 
-  // Si no existe el objeto o el rol no es admin (limpiando espacios), fuera.
   if (!datosUsuario || datosUsuario.rol.trim().toLowerCase() !== "admin") {
     alert("Acceso denegado: Se requiere cuenta de administrador");
-    window.location.href = "login.html"; // Mejor mandarlo al login que al index
+    window.location.href = "login.html";
   }
 
   function logout() {
