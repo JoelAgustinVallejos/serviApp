@@ -1,52 +1,57 @@
-const form = document.getElementById("formTurno");
-const mensaje = document.getElementById("mensaje");
-if (!localStorage.getItem("usuario")) {
-    window.location.href = "login.html";
-}
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
+document.addEventListener("DOMContentLoaded", cargarMisTurnos);
 
-  const userStorage = JSON.parse(localStorage.getItem("usuario"));
-
-  if (!userStorage || !userStorage.id) {
-    alert("Sesión inválida. Inicia sesión nuevamente.");
-    window.location.href = "login.html";
-    return;
-  }
-
-  const nombre = document.getElementById("nombre").value;
-  const fecha = document.getElementById("fecha").value;
-  const hora = document.getElementById("hora").value;
-
-  mensaje.textContent = "Enviando...";
-  mensaje.style.color = "blue";
-
-  try {
-    const response = await fetch("http://localhost:3000/appointments", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
-        nombre, 
-        fecha, 
-        hora, 
-        usuario_id: userStorage.id 
-      }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      mensaje.style.color = "red";
-      mensaje.textContent = data.error;
-      return;
+async function cargarMisTurnos() {
+    const userStorage = JSON.parse(localStorage.getItem("usuario"));
+    if (!userStorage) {
+        window.location.href = "login.html";
+        return;
     }
 
-    mensaje.style.color = "green";
-    mensaje.textContent = data.message;
-    form.reset();
+    try {
+        // URL corregida apuntando a /appointments/mis-turnos/id
+        const res = await fetch(`http://localhost:3000/appointments/mis-turnos/${userStorage.id}`);
+        const turnos = await res.json();
 
-  } catch (error) {
-    mensaje.style.color = "red";
-    mensaje.textContent = "❌ Error de conexión con el servidor";
-  }
-});
+        const tabla = document.getElementById("tablaMisTurnos");
+        if (!tabla) return; 
+
+        tabla.innerHTML = ""; 
+
+        turnos.forEach(t => {
+            const fechaFmt = t.fecha ? t.fecha.split("T")[0] : "---";
+            tabla.innerHTML += `
+                <tr>
+                    <td>${t.nombre}</td>
+                    <td>${fechaFmt}</td>
+                    <td>${t.hora.slice(0, 5)} hs</td>
+                    <td><strong style="color: ${t.estado === 'confirmado' ? 'green' : 'orange'}">${t.estado.toUpperCase()}</strong></td>
+                    <td>
+                        <button onclick="eliminarTurno(${t.id})" style="border:none; background:none; cursor:pointer; font-size: 1.2rem;">❌</button>
+                    </td>
+                </tr>`;
+        });
+    } catch (error) {
+        console.error("Error al cargar turnos:", error);
+    }
+}
+
+async function eliminarTurno(id) {
+    if (!confirm("¿Deseas cancelar este turno?")) return;
+
+    try {
+        // URL corregida apuntando a /appointments/id
+        const res = await fetch(`http://localhost:3000/appointments/${id}`, {
+            method: "DELETE"
+        });
+
+        if (res.ok) {
+            cargarMisTurnos(); // Recargamos la tabla
+        } else {
+            const data = await res.json();
+            alert(data.error || "Error al eliminar");
+        }
+    } catch (error) {
+        console.error("Error al intentar cancelar:", error);
+        alert("Error al intentar cancelar");
+    }
+}

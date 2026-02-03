@@ -5,6 +5,7 @@ const { initDB } = require("./src/db");
 
 const userRoutes = require("./src/routes/users");
 const appointmentRoutes = require("./src/routes/appointments");
+const adminRoutes = require("./src/routes/admin"); 
 
 const app = express();
 app.use(cors());
@@ -12,6 +13,7 @@ app.use(express.json());
 
 app.use("/users", userRoutes); 
 app.use("/appointments", appointmentRoutes);
+app.use("/admin", adminRoutes); 
 
 app.use("/assets", express.static(path.join(__dirname, "..", "frontend", "assets")));
 
@@ -25,5 +27,5 @@ app.get("/:page.html", (req, res) => {
 
 const PORT = 3000;
 initDB().then(() => {
-    app.listen(PORT, () => console.log(`🚀 Servidor en puerto ${PORT}`));
+    app.listen(PORT, () => console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`));
 });

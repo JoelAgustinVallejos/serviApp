@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function cargarConfiguracion() {
     try {
-        const res = await fetch("http://localhost:3000/appointments/config");
+        const res = await fetch("http://localhost:3000/admin/config");
         if (!res.ok) throw new Error("No se pudo obtener la configuración");
         
         const config = await res.json();
@@ -48,7 +48,7 @@ async function guardarConfiguracion() {
     }
 
     try {
-        const res = await fetch("http://localhost:3000/appointments/config", {
+        const res = await fetch("http://localhost:3000/admin/config", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ hora_inicio, hora_fin })
@@ -68,9 +68,10 @@ async function guardarConfiguracion() {
     }
 }
 
+
 async function cargarTurnos() {
     try {
-        const res = await fetch("http://localhost:3000/appointments/admin/all");
+        const res = await fetch("http://localhost:3000/admin/all");
         const turnos = await res.json();
         const tabla = document.getElementById("tablaTurnos");
         tabla.innerHTML = "";
@@ -99,7 +100,7 @@ async function cargarTurnos() {
 
 async function cambiarEstado(id, nuevoEstado) {
     try {
-        const res = await fetch(`http://localhost:3000/appointments/status/${id}`, {
+        const res = await fetch(`http://localhost:3000/admin/status/${id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ nuevoEstado })
