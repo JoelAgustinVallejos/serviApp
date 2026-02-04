@@ -1,73 +1,111 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Panel Admin - Gestión de Turnos</title>
-  <link rel="stylesheet" href="/assets/css/styles.css">
-  <style>
-    .config-container {
-      background: #f4f4f4;
-      padding: 20px;
-      margin: 20px 0;
-      border-radius: 8px;
-      border-left: 5px solid #333;
-    }
-    .config-container h3 { margin-top: 0; }
-    .form-group { margin-bottom: 10px; display: inline-block; margin-right: 20px; }
-    .form-group label { display: block; font-weight: bold; margin-bottom: 5px; }
-    #msgConfig { font-weight: bold; margin-top: 10px; display: block; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin - Gestión de Turnos</title>
+    <link rel="stylesheet" href="/assets/css/styles.css">
 </head>
 <body>
 
-<h1>🔐 Panel Admin</h1>
-<button onclick="logout()">Cerrar sesión</button>
-
-<section class="config-container">
-    <h3>⚙️ Configuración de Jornada Laboral</h3>
-    <div class="form-group">
-        <label for="horaInicio">Hora de Apertura:</label>
-        <input type="time" id="horaInicio">
+    <h1>🔐 Panel Administrativo</h1>
+    
+    <div class="logout-container">
+        <button class="logout-btn" onclick="logout()">Cerrar sesión</button>
     </div>
-    <div class="form-group">
-        <label for="horaFin">Hora de Cierre:</label>
-        <input type="time" id="horaFin">
+
+    <section class="config-container">
+        <h3>⚙️ Configuración de Jornada</h3>
+        <div class="form-group">
+            <label for="horaInicio">Hora de Apertura:</label>
+            <input type="time" id="horaInicio">
+        </div>
+        <div class="form-group">
+            <label for="horaFin">Hora de Cierre:</label>
+            <input type="time" id="horaFin">
+        </div>
+        <button onclick="guardarConfiguracion()">Guardar Horario</button>
+        <span id="msgConfig"></span>
+    </section>
+
+    <hr style="margin: 40px 0; border: 0; border-top: 1px solid rgba(255,255,255,0.1); width: 100%;">
+
+    <div class="container" style="max-width: 900px; margin-bottom: 20px;">
+        <h3>🔍 Buscar y Filtrar Turnos</h3>
+        <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px;">
+            <div style="flex: 1; min-width: 200px;">
+                <label style="color: var(--text-main);">Por Nombre:</label>
+                <input type="text" id="buscarNombre" placeholder="Escribe un nombre..." onkeyup="filtrarTurnos()">
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+                <label style="color: var(--text-main);">Por Fecha:</label>
+                <input type="date" id="buscarFecha" onchange="filtrarTurnos()">
+            </div>
+            <div style="display: flex; align-items: flex-end; padding-bottom: 20px;">
+                <button onclick="limpiarFiltros()" style="padding: 10px; background: #64748b;">Limpiar</button>
+            </div>
+        </div>
     </div>
-    <button onclick="guardarConfiguracion()" style="padding: 8px 15px; cursor: pointer;">Guardar Horario</button>
-    <span id="msgConfig"></span>
-</section>
 
-<hr>
+    <h3>📅 Agenda de Turnos</h3>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Fecha</th>
+                    <th>Hora</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tablaTurnos">
+                </tbody>
+        </table>
+    </div>
 
-<h3>📅 Agenda de Turnos</h3>
-<table border="1" style="width: 100%; text-align: left; border-collapse: collapse;">
-  <thead>
-    <tr style="background-color: #eee;">
-      <th>ID</th>
-      <th>Nombre</th>
-      <th>Fecha</th>
-      <th>Hora</th>
-      <th>Estado</th>
-      <th>Acciones</th>
-    </tr>
-  </thead>
-  <tbody id="tablaTurnos"></tbody>
-</table>
+    <script>
+        const datosUsuario = JSON.parse(localStorage.getItem("usuario"));
 
-<script>
-  const datosUsuario = JSON.parse(localStorage.getItem("usuario"));
+        if (!datosUsuario || datosUsuario.rol.trim().toLowerCase() !== "admin") {
+            alert("Acceso denegado: Se requiere cuenta de administrador");
+            window.location.href = "login.html";
+        }
 
-  if (!datosUsuario || datosUsuario.rol.trim().toLowerCase() !== "admin") {
-    alert("Acceso denegado: Se requiere cuenta de administrador");
-    window.location.href = "login.html";
-  }
+        function logout() {
+            localStorage.clear();
+            window.location.href = "login.html";
+        }
 
-  function logout() {
-    localStorage.clear();
-    window.location.href = "login.html";
-  }
-</script>
+        // Lógica rápida de filtrado en el cliente
+        function filtrarTurnos() {
+            const nombre = document.getElementById("buscarNombre").value.toLowerCase();
+            const fecha = document.getElementById("buscarFecha").value;
+            const filas = document.querySelectorAll("#tablaTurnos tr");
 
-<script src="/assets/js/admin.js"></script>
+            filas.forEach(fila => {
+                const textoNombre = fila.cells[1].textContent.toLowerCase();
+                const textoFecha = fila.cells[2].textContent;
+                
+                const coincideNombre = textoNombre.includes(nombre);
+                const coincideFecha = fecha === "" || textoFecha.includes(fecha);
+
+                if (coincideNombre && coincideFecha) {
+                    fila.style.display = "";
+                } else {
+                    fila.style.display = "none";
+                }
+            });
+        }
+
+        function limpiarFiltros() {
+            document.getElementById("buscarNombre").value = "";
+            document.getElementById("buscarFecha").value = "";
+            filtrarTurnos();
+        }
+    </script>
+
+    <script src="/assets/js/admin.js"></script>
 </body>
 </html>

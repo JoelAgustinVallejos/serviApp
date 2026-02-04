@@ -17,6 +17,17 @@ document.addEventListener("DOMContentLoaded", () => {
     cargarTurnos();
 });
 
+function mostrarFeedback(elementoId, texto, esExito) {
+    const msg = document.getElementById(elementoId);
+    msg.innerText = texto;
+    msg.className = esExito ? "msg-success" : "msg-error";
+    msg.style.display = "block";
+
+    setTimeout(() => {
+        msg.style.display = "none";
+        msg.className = "";
+    }, 4000);
+}
 
 async function cargarConfiguracion() {
     try {
@@ -25,8 +36,10 @@ async function cargarConfiguracion() {
         
         const config = await res.json();
         
-        document.getElementById("horaInicio").value = config.hora_inicio.slice(0, 5);
-        document.getElementById("horaFin").value = config.hora_fin.slice(0, 5);
+        if (config) {
+            document.getElementById("horaInicio").value = config.hora_inicio.slice(0, 5);
+            document.getElementById("horaFin").value = config.hora_fin.slice(0, 5);
+        }
     } catch (error) {
         console.error("Error al cargar configuración:", error);
     }
@@ -35,39 +48,47 @@ async function cargarConfiguracion() {
 async function guardarConfiguracion() {
     const hora_inicio = document.getElementById("horaInicio").value;
     const hora_fin = document.getElementById("horaFin").value;
-    const msg = document.getElementById("msgConfig");
+    const btn = document.querySelector(".config-container button"); // Seleccionamos el botón
 
     if (!hora_inicio || !hora_fin) {
-        alert("Debes completar ambos horarios");
+        mostrarFeedback("msgConfig", "⚠️ Completa ambos campos", false);
         return;
     }
 
     if (hora_inicio >= hora_fin) {
-        alert("La hora de inicio debe ser menor a la hora de cierre.");
+        mostrarFeedback("msgConfig", "⚠️ La apertura debe ser antes del cierre", false);
         return;
     }
 
     try {
+        const textoOriginal = btn.innerText;
+        btn.innerText = "⏳ Guardando...";
+        btn.disabled = true;
+
         const res = await fetch("http://localhost:3000/admin/config", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ hora_inicio, hora_fin })
         });
 
+        const data = await res.json();
+
         if (res.ok) {
-            msg.innerText = "✅ Horario guardado correctamente";
-            msg.style.color = "green";
-            setTimeout(() => msg.innerText = "", 3000);
+            mostrarFeedback("msgConfig", data.message || "✅ Horario actualizado", true);
         } else {
-            msg.innerText = "❌ Error al guardar";
-            msg.style.color = "red";
+            mostrarFeedback("msgConfig", "❌ Error al guardar", false);
         }
+
+        btn.innerText = textoOriginal;
+        btn.disabled = false;
+
     } catch (error) {
         console.error("Error:", error);
-        msg.innerText = "❌ Error de conexión";
+        mostrarFeedback("msgConfig", "❌ Error de conexión con el servidor", false);
+        btn.innerText = "Guardar Horario";
+        btn.disabled = false;
     }
 }
-
 
 async function cargarTurnos() {
     try {
@@ -76,9 +97,14 @@ async function cargarTurnos() {
         const tabla = document.getElementById("tablaTurnos");
         tabla.innerHTML = "";
 
+        if (turnos.length === 0) {
+            tabla.innerHTML = `<tr><td colspan="7" style="text-align:center;">No hay turnos registrados</td></tr>`;
+            return;
+        }
+
         turnos.forEach(t => {
             const fechaFmt = t.fecha ? t.fecha.split("T")[0] : "---";
-            const color = t.estado === 'confirmado' ? 'green' : 'orange';
+            const colorEstado = t.estado === 'confirmado' ? '#22c55e' : '#f59e0b';
             
             tabla.innerHTML += `
                 <tr>
@@ -86,10 +112,14 @@ async function cargarTurnos() {
                     <td>${t.nombre}</td>
                     <td>${fechaFmt}</td>
                     <td>${t.hora.slice(0, 5)} hs</td>
-                    <td><b style="color: ${color}">${t.estado.toUpperCase()}</b></td>
+                    <td><span style="color: ${colorEstado}; font-weight: bold;">${t.estado.toUpperCase()}</span></td>
                     <td>
-                        <button onclick="cambiarEstado(${t.id}, 'confirmado')">✅ Confirmar</button>
-                        <button onclick="eliminar(${t.id})">🗑️ Eliminar</button>
+                        <div style="display: flex; gap: 8px;">
+                            ${t.estado !== 'confirmado' ? 
+                                `<button onclick="cambiarEstado(${t.id}, 'confirmado')" style="padding: 8px; background: #22c55e;">Confirmar</button>` : 
+                                ''}
+                            <button onclick="eliminar(${t.id})" style="padding: 8px; background: #ef4444;">Eliminar</button>
+                        </div>
                     </td>
                 </tr>`;
         });

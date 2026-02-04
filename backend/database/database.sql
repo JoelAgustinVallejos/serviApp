@@ -27,6 +27,13 @@ CREATE TABLE IF NOT EXISTS configuracion (
     CONSTRAINT unica_fila CHECK (id = 1)
 );
 
+CREATE TABLE IF NOT EXISTS servicios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    precio DECIMAL(10, 2) NOT NULL,
+    duracion_minutos INT NOT NULL DEFAULT 30
+);
+
 -- INSERT del Admin con el hash que TU sistema reconoce (Email: admin@amdin.com | Password original: admin123)
 INSERT INTO usuarios (nombre, email, password, rol) 
 VALUES ('Admin', 'admin@admin.com', '$2b$10$eC9mzko7OtnmWf742Jwzl.Fl0zcJsRJGBkY4YRzL1bakTIU8ij75K', 'admin')

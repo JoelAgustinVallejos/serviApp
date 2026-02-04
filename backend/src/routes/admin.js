@@ -5,7 +5,11 @@ const { getDB } = require("../db");
 router.get("/all", async (req, res) => {
     try {
         const db = getDB();
-        const [rows] = await db.execute("SELECT * FROM turnos ORDER BY fecha ASC, hora ASC");
+        const [rows] = await db.execute(`
+            SELECT t.*, s.nombre as servicio_nombre, s.precio 
+            FROM turnos t 
+            LEFT JOIN servicios s ON t.servicio_id = s.id 
+            ORDER BY t.fecha ASC, t.hora ASC`);
         res.json(rows);
     } catch (error) {
         res.status(500).json({ error: "Error al obtener la agenda completa" });
