@@ -1,4 +1,4 @@
-/* Variables Globales */
+/* Variables Globales (Mantengo las tuyas) */
 :root {
     --primary: #007bff;
     --primary-hover: #0056b3;
@@ -9,15 +9,11 @@
     --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
     --table-bg: #1e293b;
     --border-color: #334155;
-    --accent-blue: #0062ff; /* Color para que el h3 destaque */
+    --accent-blue: #0062ff;
 }
 
 /* Reseteo Crítico */
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -28,47 +24,14 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center; 
-    justify-content: center; /* Centrado vertical para Login/Registro */
     padding: 40px 20px;
     color: var(--text-light);
     overflow-x: hidden;
 }
 
-/* Títulos h1 (Panel General) */
-h1 {
-    font-size: clamp(1.8rem, 5vw, 2.5rem);
-    margin-bottom: 30px;
-    text-align: center;
-    width: 100%;
-}
+h1 { font-size: 2.5rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
 
-/* Títulos h2 (🔐 Iniciar sesión / 📝 Registro) */
-h2 {
-    font-size: 2.1rem;
-    margin-bottom: 45px; /* Separación amplia solicitada */
-    text-align: center;
-    color: var(--text-light);
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 15px; /* Espacio para el icono */
-}
-
-/* Títulos h3 (⚙️ Configuración / Dentro de tarjeta) */
-h3 {
-    margin-bottom: 25px;
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--accent-blue) !important; /* Azul vibrante visible en blanco */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    width: 100%;
-}
-
-/* --- CONTENEDORES Y FORMULARIOS --- */
+/* Contenedores */
 form, .container, .config-container {
     background: var(--card-bg);
     color: var(--text-main);
@@ -76,49 +39,26 @@ form, .container, .config-container {
     border-radius: 24px;
     box-shadow: var(--shadow);
     width: 100%;
-    max-width: 450px;
-    margin: 0 auto 30px auto;
-    transition: transform 0.3s ease;
+    max-width: 550px;
+    margin-bottom: 30px;
 }
 
-/* --- TEXTOS VISIBLES EN ADMIN --- */
-.config-container label, 
-.form-group label, 
-form label, 
-.container label {
-    color: var(--text-main) !important; /* Corrección de texto invisible */
-    display: block;
-    margin-bottom: 10px;
-    font-weight: 600;
-    text-align: left;
-}
+.form-group { margin-bottom: 20px; }
+label { display: block; margin-bottom: 8px; font-weight: 600; color: #475569; }
 
-.form-group {
-    width: 100%;
-    margin-bottom: 20px;
-}
-
-/* Inputs, Selects y Horarios */
-input, select, input[type="time"] {
+input, select {
     width: 100%;
     padding: 14px;
     border-radius: 12px;
     border: 2px solid #e2e8f0;
     background: #f8fafc;
-    color: var(--text-main);
     font-size: 16px;
-    font-family: inherit;
-    transition: all 0.3s ease;
+    transition: border-color 0.3s ease;
+    margin-bottom: 10px;
 }
 
-input:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.15);
-    background: #fff;
-}
+input:focus { outline: none; border-color: var(--primary); }
 
-/* --- BOTONES --- */
 button {
     width: 100%;
     padding: 16px;
@@ -127,71 +67,204 @@ button {
     color: white;
     border: none;
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
-button:hover {
-    background: var(--primary-hover);
-    transform: translateY(-2px);
+button:hover { background: var(--primary-hover); transform: translateY(-1px); }
+
+/* Días */
+.days-selector { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.day-checkbox { display: none; }
+.day-label {
+    padding: 10px 14px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 700;
+    background: #f8fafc;
+}
+.day-checkbox:checked + .day-label {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
 }
 
-/* Botón Logout (Tamaño controlado para Web) */
-button[onclick*="logout"], .logout-btn {
-    display: block;
-    max-width: 250px;
-    margin: 10px auto 40px auto;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+/* Tablas */
+.table-container { width: 100%; overflow-x: auto; background: var(--table-bg); border-radius: 16px; }
+table { width: 100%; border-collapse: collapse; min-width: 500px; }
+th { background: #0f172a; color: #fff; padding: 18px; text-align: left; }
+td { padding: 16px; color: #cbd5e1; border-bottom: 1px solid var(--border-color); }
+
+/* Badges */
+.badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+.badge-pendiente { background: #fef9c3; color: #854d0e; }
+.badge-confirmado { background: #dcfce7; color: #166534; }
+
+/* --- NUEVOS ESTILOS PARA DÍAS ESPECIALES (CENTRADO Y RESPONSIVE) --- */
+
+.input-row-especial {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Dos columnas en PC */
+    gap: 15px;
+    margin-bottom: 20px;
 }
 
-/* --- TABLAS RESPONSIVE --- */
+.btn-center-container {
+    display: flex;
+    justify-content: center; /* Centrado horizontal */
+    width: 100%;
+}
+
+.btn-especial-grande {
+    width: 100% !important;
+    max-width: 400px; /* Tamaño máximo para que no se vea gigante en monitores grandes */
+    padding: 18px !important;
+    font-size: 1.1rem !important;
+    background-color: var(--primary) !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.mini-table-container {
+    margin-top: 30px;
+    border: 1px solid #e2e8f0;
+    border-radius: 15px;
+    overflow: hidden;
+    background: #f8fafc;
+}
+
+.mini-table-container table {
+    min-width: 100%;
+}
+
+.mini-table-container th {
+    background: #f1f5f9;
+    color: #64748b;
+    padding: 12px;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+
+.mini-table-container td {
+    color: var(--text-main);
+    padding: 12px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+/* Responsive para la sección nueva */
+@media (max-width: 600px) {
+    .input-row-especial {
+        grid-template-columns: 1fr; /* Una columna en celulares */
+    }
+    
+    .btn-especial-grande {
+        max-width: 100%; /* Ocupa todo el ancho en celulares */
+    }
+}
+
+#contenedorHoras {
+    display: flex;
+    flex-wrap: wrap; /* Para que bajen si no entran */
+    gap: 10px;
+    justify-content: center;
+    margin-top: 15px;
+    max-height: 300px; /* Si quieres que tenga scroll */
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.hora-card {
+    background: white;
+    color: #1e293b;
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: 2px solid #e2e8f0;
+    cursor: pointer;
+    transition: 0.3s;
+    font-weight: bold;
+}
+
+.hora-card.selected {
+    border-color: #007bff;
+    background: #007bff;
+    color: white;
+}
+
+.hora-card.disabled {
+    background: #f1f5f9;
+    color: #cbd5e1;
+    cursor: not-allowed;
+    border-color: #f1f5f9;
+}
+
+/* Soporte para tablas en celulares */
 .table-container {
     width: 100%;
-    max-width: 900px;
-    background: var(--table-bg);
-    border-radius: 20px;
-    overflow-x: auto;
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow);
-    margin-top: 10px;
+    overflow-x: auto; /* Permite scroll horizontal en móviles */
+    background: #ffffff;
+    border-radius: 12px;
+    margin-top: 15px;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 650px;
+    min-width: 600px; /* Evita que la tabla se amontone */
+    color: #1e293b;
 }
 
-th {
-    background: #0f172a;
-    color: #fff;
-    padding: 20px 15px;
-    text-transform: uppercase;
-    font-size: 0.8rem;
-    text-align: left;
+/* Ajustes de formularios para que no se rompan */
+.config-container form, .search-box {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
-td {
-    padding: 16px 15px;
-    color: #cbd5e1;
-    border-bottom: 1px solid var(--border-color);
-    white-space: nowrap;
+.search-box input {
+    flex: 1;
+    min-width: 150px;
 }
 
-/* Vistas de Celular */
-@media (max-width: 480px) {
-    body {
-        padding: 20px 15px;
-        justify-content: flex-start; /* Evita que el contenido se pierda arriba */
-    }
-    
-    h2 { font-size: 1.7rem; margin-bottom: 35px; }
-    h3 { font-size: 1.25rem; }
-    
-    form, .container, .config-container {
-        padding: 25px 20px;
-    }
+/* Asegura visibilidad de datos cargados por JS */
+#tablaTurnos td { color: #f8fafc; } /* Blanco para el fondo oscuro */
+#listaServiciosAdmin td, #listaDiasEspeciales td { color: #1e293b; } /* Negro para fondo claro */
+
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 12px;
+}
+
+/* Estilo base para los horarios */
+.hora-item {
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    text-align: center;
+    transition: all 0.3s ease;
+    background: white;
+    color: black;
+}
+
+/* Color cuando pasas el mouse */
+.hora-item:hover {
+    border-color: #3b82f6;
+    background: #f0f7ff;
+}
+
+/* Color cuando está SELECCIONADO */
+.hora-item.selected {
+    background-color: #3b82f6 !important;
+    color: white !important;
+    border-color: #1d4ed8 !important;
+    transform: scale(1.05);
+}
+
+/* Color cuando está OCUPADO */
+.hora-item.ocupado {
+    background-color: #e5e7eb;
+    color: #9ca3af;
+    text-decoration: line-through;
 }

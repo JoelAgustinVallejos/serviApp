@@ -18,6 +18,8 @@ app.use("/users", userRoutes);
 app.use("/appointments", appointmentRoutes);
 app.use("/admin", adminRoutes); 
 
+app.use(express.static('public')); // O la carpeta donde tengas tus archivos HTML/JS
+
 // 3. ARCHIVOS ESTÁTICOS
 // Aseguramos que los JS y CSS se carguen correctamente
 app.use("/assets", express.static(path.join(__dirname, "..", "frontend", "assets")));

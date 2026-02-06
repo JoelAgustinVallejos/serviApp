@@ -9,103 +9,91 @@
 <body>
 
     <h1>🔐 Panel Administrativo</h1>
-    
-    <div class="logout-container">
-        <button class="logout-btn" onclick="logout()">Cerrar sesión</button>
+
+    <div style="width: 100%; max-width: 500px; margin: 20px 0;">
+        <button onclick="logout()" style="background: #ef4444;">Cerrar sesión</button>
     </div>
 
-    <section class="config-container">
-        <h3>⚙️ Configuración de Jornada</h3>
-        <div class="form-group">
-            <label for="horaInicio">Hora de Apertura:</label>
-            <input type="time" id="horaInicio">
+    <div class="config-container">
+        <h3>⚙️ Configuración General</h3>
+        <label>Días de atención:</label>
+        <div class="days-selector">
+            <input type="checkbox" id="d0" value="0" class="day-checkbox"><label for="d0" class="day-label">Dom</label>
+            <input type="checkbox" id="d1" value="1" class="day-checkbox" checked><label for="d1" class="day-label">Lun</label>
+            <input type="checkbox" id="d2" value="2" class="day-checkbox" checked><label for="d2" class="day-label">Mar</label>
+            <input type="checkbox" id="d3" value="3" class="day-checkbox" checked><label for="d3" class="day-label">Mié</label>
+            <input type="checkbox" id="d4" value="4" class="day-checkbox" checked><label for="d4" class="day-label">Jue</label>
+            <input type="checkbox" id="d5" value="5" class="day-checkbox" checked><label for="d5" class="day-label">Vie</label>
+            <input type="checkbox" id="d6" value="6" class="day-checkbox" checked><label for="d6" class="day-label">Sáb</label>
         </div>
-        <div class="form-group">
-            <label for="horaFin">Hora de Cierre:</label>
-            <input type="time" id="horaFin">
+
+        <div style="margin-top:15px;">
+            <label>Horario:</label>
+            <input type="time" id="horaInicio" value="09:00"> a <input type="time" id="horaFin" value="18:00">
         </div>
-        <button onclick="guardarConfiguracion()">Guardar Horario</button>
-        <span id="msgConfig"></span>
-    </section>
+        <button onclick="guardarConfiguracion()" style="margin-top:20px;">Guardar Configuración</button>
+    </div>
 
-    <hr style="margin: 40px 0; border: 0; border-top: 1px solid rgba(255,255,255,0.1); width: 100%;">
+    <div class="config-container">
+        <h3>🔍 Buscar Turnos</h3>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <input type="text" id="buscarNombre" placeholder="Nombre del cliente..." style="flex:2;">
+        <input type="date" id="buscarFecha" style="flex:1;">
+        <button onclick="cargarTurnos()">Buscar</button>
+        </div>
+        <div class="admin-container">
+        <h2>📅 Turnos Solicitados</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th><th>Cliente</th><th>Fecha</th><th>Hora</th><th>Estado</th><th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaTurnos"></tbody>
+            </table>
+        </div>
+    </div>
+    </div>
 
-    <div class="container" style="max-width: 900px; margin-bottom: 20px;">
-        <h3>🔍 Buscar y Filtrar Turnos</h3>
-        <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px;">
-            <div style="flex: 1; min-width: 200px;">
-                <label style="color: var(--text-main);">Por Nombre:</label>
-                <input type="text" id="buscarNombre" placeholder="Escribe un nombre..." onkeyup="filtrarTurnos()">
-            </div>
-            <div style="flex: 1; min-width: 200px;">
-                <label style="color: var(--text-main);">Por Fecha:</label>
-                <input type="date" id="buscarFecha" onchange="filtrarTurnos()">
-            </div>
-            <div style="display: flex; align-items: flex-end; padding-bottom: 20px;">
-                <button onclick="limpiarFiltros()" style="padding: 10px; background: #64748b;">Limpiar</button>
-            </div>
+
+
+    <div class="config-container">
+        <h3>💇‍♂️ Servicios</h3>
+        <form id="formNuevoServicio" style="display:flex; gap:10px; margin-bottom:20px;">
+            <input type="text" id="servNombre" placeholder="Nombre" required>
+            <input type="number" id="servPrecio" placeholder="Precio" required>
+            <button type="submit">Añadir</button>
+        </form>
+        <div class="table-container">
+            <table style="width:100%;">
+                <tbody id="listaServiciosAdmin"></tbody>
+            </table>
         </div>
     </div>
 
-    <h3>📅 Agenda de Turnos</h3>
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nombre</th>
-                    <th>Fecha</th>
-                    <th>Hora</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody id="tablaTurnos">
-                </tbody>
-        </table>
+    <div class="config-container">
+        <h3>🚫 Bloquear Día</h3>
+        <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <input type="date" id="fechaEspecial">
+            <input type="text" id="descEspecial" placeholder="Motivo">
+            <button onclick="agregarDiaEspecial()">Bloquear</button>
+        </div>
+        <div class="table-container">
+            <table style="width:100%;">
+                <tbody id="listaDiasEspeciales"></tbody>
+            </table>
+        </div>
     </div>
 
-    <script>
-        const datosUsuario = JSON.parse(localStorage.getItem("usuario"));
-
-        if (!datosUsuario || datosUsuario.rol.trim().toLowerCase() !== "admin") {
-            alert("Acceso denegado: Se requiere cuenta de administrador");
-            window.location.href = "login.html";
-        }
-
-        function logout() {
-            localStorage.clear();
-            window.location.href = "login.html";
-        }
-
-        // Lógica rápida de filtrado en el cliente
-        function filtrarTurnos() {
-            const nombre = document.getElementById("buscarNombre").value.toLowerCase();
-            const fecha = document.getElementById("buscarFecha").value;
-            const filas = document.querySelectorAll("#tablaTurnos tr");
-
-            filas.forEach(fila => {
-                const textoNombre = fila.cells[1].textContent.toLowerCase();
-                const textoFecha = fila.cells[2].textContent;
-                
-                const coincideNombre = textoNombre.includes(nombre);
-                const coincideFecha = fecha === "" || textoFecha.includes(fecha);
-
-                if (coincideNombre && coincideFecha) {
-                    fila.style.display = "";
-                } else {
-                    fila.style.display = "none";
-                }
-            });
-        }
-
-        function limpiarFiltros() {
-            document.getElementById("buscarNombre").value = "";
-            document.getElementById("buscarFecha").value = "";
-            filtrarTurnos();
-        }
-    </script>
+    <div id="modalExito" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 99999;">
+        <div style="background: white; padding: 40px; border-radius: 30px; text-align: center;">
+            <video id="videoCheck" width="180" muted playsinline><source src="/assets/video/check.mp4" type="video/mp4"></video>
+            <h2 id="modalTxt" style="color: #1e293b; margin-top: 15px;">¡Hecho!</h2>
+        </div>
+    </div>
 
     <script src="/assets/js/admin.js"></script>
+    <script>function logout(){ localStorage.clear(); window.location.href="login.html"; }</script>
 </body>
 </html>

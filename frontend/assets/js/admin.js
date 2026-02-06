@@ -1,155 +1,173 @@
+const API_URL = "http://localhost:3000/admin";
+
 document.addEventListener("DOMContentLoaded", () => {
-    const datosRaw = localStorage.getItem("usuario");
-    if (!datosRaw) {
-        window.location.href = "login.html";
-        return;
-    }
-    const userStorage = JSON.parse(datosRaw);
-    const rol = userStorage.rol ? userStorage.rol.trim().toLowerCase() : "";
-
-    if (rol !== "admin") {
-        alert("Acceso denegado");
-        window.location.href = "login.html";
-        return;
-    }
-
     cargarConfiguracion();
     cargarTurnos();
+    cargarServiciosAdmin();
+    cargarDiasEspeciales();
+
+    document.getElementById("formNuevoServicio").addEventListener("submit", agregarServicio);
 });
 
-function mostrarFeedback(elementoId, texto, esExito) {
-    const msg = document.getElementById(elementoId);
-    msg.innerText = texto;
-    msg.className = esExito ? "msg-success" : "msg-error";
-    msg.style.display = "block";
-
-    setTimeout(() => {
-        msg.style.display = "none";
-        msg.className = "";
-    }, 4000);
+// --- FUNCIONES DE CARGA ---
+async function cargarServiciosAdmin() {
+    const res = await fetch(`${API_URL}/servicios`);
+    const servicios = await res.json();
+    const lista = document.getElementById("listaServiciosAdmin");
+    lista.innerHTML = servicios.map(s => `
+        <tr>
+            <td style="color:black; padding:10px;">${s.nombre}</td>
+            <td style="color:black; padding:10px;">$${s.precio}</td>
+            <td><button onclick="eliminarServicio(${s.id})" style="background:none; border:none; cursor:pointer;">❌</button></td>
+        </tr>
+    `).join('');
 }
 
+async function agregarServicio(e) {
+    e.preventDefault();
+    const nombre = document.getElementById("servNombre").value;
+    const precio = document.getElementById("servPrecio").value;
+
+    const res = await fetch(`${API_URL}/servicios`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre, precio })
+    });
+
+    if (res.ok) {
+        lanzarExito("Servicio Creado");
+        e.target.reset();
+        cargarServiciosAdmin();
+    }
+}
+
+// ELIMINADO confirm() - Ahora es directo con tu carta flotante
+async function eliminarServicio(id) {
+    const res = await fetch(`${API_URL}/servicios/${id}`, { method: "DELETE" });
+    if (res.ok) {
+        lanzarExito("Servicio Eliminado");
+        cargarServiciosAdmin();
+    }
+}
+
+// --- CONFIGURACIÓN ---
 async function cargarConfiguracion() {
-    try {
-        const res = await fetch("http://localhost:3000/admin/config");
-        if (!res.ok) throw new Error("No se pudo obtener la configuración");
-        
-        const config = await res.json();
-        
-        if (config) {
-            document.getElementById("horaInicio").value = config.hora_inicio.slice(0, 5);
-            document.getElementById("horaFin").value = config.hora_fin.slice(0, 5);
-        }
-    } catch (error) {
-        console.error("Error al cargar configuración:", error);
+    const res = await fetch(`${API_URL}/config`);
+    const config = await res.json();
+    if (config) {
+        document.getElementById("horaInicio").value = config.hora_inicio.slice(0, 5);
+        document.getElementById("horaFin").value = config.hora_fin.slice(0, 5);
+        const dias = JSON.parse(config.dias_laborales || "[]");
+        document.querySelectorAll('.day-checkbox').forEach(cb => {
+            cb.checked = dias.includes(parseInt(cb.value));
+        });
     }
 }
 
 async function guardarConfiguracion() {
     const hora_inicio = document.getElementById("horaInicio").value;
     const hora_fin = document.getElementById("horaFin").value;
-    const btn = document.querySelector(".config-container button"); // Seleccionamos el botón
+    const dias_laborales = Array.from(document.querySelectorAll('.day-checkbox:checked')).map(cb => parseInt(cb.value));
 
-    if (!hora_inicio || !hora_fin) {
-        mostrarFeedback("msgConfig", "⚠️ Completa ambos campos", false);
-        return;
-    }
+    const res = await fetch(`${API_URL}/config`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hora_inicio, hora_fin, dias_laborales: JSON.stringify(dias_laborales) })
+    });
+    if (res.ok) lanzarExito("Configuración Guardada");
+}
 
-    if (hora_inicio >= hora_fin) {
-        mostrarFeedback("msgConfig", "⚠️ La apertura debe ser antes del cierre", false);
-        return;
-    }
+// --- DÍAS ESPECIALES ---
+async function cargarDiasEspeciales() {
+    const res = await fetch(`${API_URL}/dias-especiales`);
+    const dias = await res.json();
+    const lista = document.getElementById("listaDiasEspeciales");
+    lista.innerHTML = dias.map(d => `
+        <tr>
+            <td style="color:black; padding:10px;">${d.fecha.split('T')[0]}</td>
+            <td style="color:black; padding:10px;">${d.descripcion}</td>
+            <td><button onclick="eliminarDiaEspecial(${d.id})" style="background:none; border:none; cursor:pointer;">❌</button></td>
+        </tr>
+    `).join('');
+}
 
-    try {
-        const textoOriginal = btn.innerText;
-        btn.innerText = "⏳ Guardando...";
-        btn.disabled = true;
+async function agregarDiaEspecial() {
+    const fecha = document.getElementById("fechaEspecial").value;
+    const descripcion = document.getElementById("descEspecial").value;
+    if(!fecha) return; // Validación silenciosa sin alert
 
-        const res = await fetch("http://localhost:3000/admin/config", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ hora_inicio, hora_fin })
-        });
-
-        const data = await res.json();
-
-        if (res.ok) {
-            mostrarFeedback("msgConfig", data.message || "✅ Horario actualizado", true);
-        } else {
-            mostrarFeedback("msgConfig", "❌ Error al guardar", false);
-        }
-
-        btn.innerText = textoOriginal;
-        btn.disabled = false;
-
-    } catch (error) {
-        console.error("Error:", error);
-        mostrarFeedback("msgConfig", "❌ Error de conexión con el servidor", false);
-        btn.innerText = "Guardar Horario";
-        btn.disabled = false;
+    const res = await fetch(`${API_URL}/dias-especiales`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fecha, descripcion })
+    });
+    if (res.ok) {
+        lanzarExito("Día Bloqueado");
+        cargarDiasEspeciales();
     }
 }
 
+async function eliminarDiaEspecial(id) {
+    const res = await fetch(`${API_URL}/dias-especiales/${id}`, { method: "DELETE" });
+    if (res.ok) {
+        lanzarExito("Día Desbloqueado");
+        cargarDiasEspeciales();
+    }
+}
+
+// --- TURNOS ---
 async function cargarTurnos() {
-    try {
-        const res = await fetch("http://localhost:3000/admin/all");
-        const turnos = await res.json();
-        const tabla = document.getElementById("tablaTurnos");
-        tabla.innerHTML = "";
+    const nom = document.getElementById("buscarNombre").value;
+    const fec = document.getElementById("buscarFecha").value;
+    const res = await fetch(`${API_URL}/turnos?nombre=${nom}&fecha=${fec}`);
+    const turnos = await res.json();
+    const tabla = document.getElementById("tablaTurnos");
+    tabla.innerHTML = turnos.map(t => `
+        <tr>
+            <td>${t.id}</td>
+            <td>${t.nombre}</td>
+            <td>${t.fecha.split('T')[0]}</td>
+            <td>${t.hora.slice(0, 5)} hs</td>
+            <td>${t.estado.toUpperCase()}</td>
+            <td>
+                <button onclick="cambiarEstado(${t.id}, 'confirmado')" style="cursor:pointer;">✓</button>
+                <button onclick="eliminarTurno(${t.id})" style="cursor:pointer;">✕</button>
+            </td>
+        </tr>
+    `).join('');
+}
 
-        if (turnos.length === 0) {
-            tabla.innerHTML = `<tr><td colspan="7" style="text-align:center;">No hay turnos registrados</td></tr>`;
-            return;
-        }
-
-        turnos.forEach(t => {
-            const fechaFmt = t.fecha ? t.fecha.split("T")[0] : "---";
-            const colorEstado = t.estado === 'confirmado' ? '#22c55e' : '#f59e0b';
-            
-            tabla.innerHTML += `
-                <tr>
-                    <td>${t.id}</td>
-                    <td>${t.nombre}</td>
-                    <td>${fechaFmt}</td>
-                    <td>${t.hora.slice(0, 5)} hs</td>
-                    <td><span style="color: ${colorEstado}; font-weight: bold;">${t.estado.toUpperCase()}</span></td>
-                    <td>
-                        <div style="display: flex; gap: 8px;">
-                            ${t.estado !== 'confirmado' ? 
-                                `<button onclick="cambiarEstado(${t.id}, 'confirmado')" style="padding: 8px; background: #22c55e;">Confirmar</button>` : 
-                                ''}
-                            <button onclick="eliminar(${t.id})" style="padding: 8px; background: #ef4444;">Eliminar</button>
-                        </div>
-                    </td>
-                </tr>`;
-        });
-    } catch (error) {
-        console.error("Error cargando turnos:", error);
+async function cambiarEstado(id, estado) {
+    const res = await fetch(`${API_URL}/turnos/${id}/estado`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ estado })
+    });
+    if (res.ok) {
+        lanzarExito("Estado Actualizado");
+        cargarTurnos();
     }
 }
 
-async function cambiarEstado(id, nuevoEstado) {
-    try {
-        const res = await fetch(`http://localhost:3000/admin/status/${id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nuevoEstado })
-        });
-        if (res.ok) cargarTurnos();
-    } catch (error) {
-        console.error("Error al actualizar estado:", error);
+// ELIMINADO confirm() - Ahora es directo
+async function eliminarTurno(id) {
+    const res = await fetch(`${API_URL}/turnos/${id}`, { method: "DELETE" });
+    if (res.ok) {
+        lanzarExito("Turno Eliminado");
+        cargarTurnos();
     }
 }
 
-async function eliminar(id) {
-    if (!confirm("¿Estás seguro de que deseas eliminar este turno?")) return;
+// --- TU CARTA FLOTANTE ---
+function lanzarExito(t) {
+    document.getElementById("modalTxt").innerText = t;
+    const m = document.getElementById("modalExito");
+    m.style.display = "flex";
+    const v = document.getElementById("videoCheck");
+    v.currentTime = 0;
+    v.play().catch(e => console.log("Esperando interacción para video"));
     
-    try {
-        const res = await fetch(`http://localhost:3000/appointments/${id}`, {
-            method: "DELETE"
-        });
-        if (res.ok) cargarTurnos();
-    } catch (error) {
-        console.error("Error al eliminar:", error);
-    }
+    setTimeout(() => {
+        m.style.display = "none";
+    }, 2500);
 }
