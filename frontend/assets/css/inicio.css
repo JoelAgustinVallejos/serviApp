@@ -1,0 +1,115 @@
+/* =========================================================
+   HOME - DISEÑO PROFESIONAL Y DINÁMICO
+   ========================================================= */
+
+:root {
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    --card-bg: rgba(255, 255, 255, 0.05); /* Efecto Glass */
+    --text-light: #f8fafc;
+    --radius: 16px;
+    --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* 1. BASE Y FONDO ANIMADO */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body {
+    background: var(--bg-gradient);
+    background-image: linear-gradient(to right, rgb(237, 0, 245), rgb(4, 8, 255));
+    background-attachment: fixed;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: var(--text-light);
+}
+
+/* 2. TÍTULO CON ESTILO */
+h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 2rem;
+    text-align: center;
+    letter-spacing: -1px;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+/* 3. CONTENEDOR PRINCIPAL (GLASSMORPHISM) */
+.container {
+    width: 100%;
+    max-width: 400px;
+    background: var(--card-bg);
+    backdrop-filter: blur(12px); /* Desfoque de fondo */
+    -webkit-backdrop-filter: blur(12px);
+    padding: 40px;
+    border-radius: var(--radius);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Espaciado entre botones sin usar <br> */
+}
+
+/* 4. BOTONES DINÁMICOS */
+button {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Botón de Iniciar Sesión (Principal) */
+button:first-child {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+}
+
+button:first-child:hover {
+    background: var(--primary-hover);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+}
+
+/* Botón de Registrarse (Secundario / Outline) */
+button:last-child {
+    background: transparent;
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+button:last-child:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: white;
+    transform: translateY(-3px);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+/* 5. RESPONSIVE */
+@media (max-width: 480px) {
+    h1 {
+        font-size: 1.8rem;
+    }
+    
+    .container {
+        padding: 30px 20px;
+    }
+}

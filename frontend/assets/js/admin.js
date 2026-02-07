@@ -93,16 +93,21 @@ async function cargarDiasEspeciales() {
 
 async function agregarDiaEspecial() {
     const fecha = document.getElementById("fechaEspecial").value;
-    const descripcion = document.getElementById("descEspecial").value;
-    if(!fecha) return; // Validación silenciosa sin alert
+    // CORRECCIÓN: Usar 'bloqueoMotivo' que es el ID que está en tu admin.html
+    const descripcion = document.getElementById("bloqueoMotivo").value;
+    
+    if(!fecha || !descripcion) return; 
 
     const res = await fetch(`${API_URL}/dias-especiales`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fecha, descripcion })
     });
+
     if (res.ok) {
         lanzarExito("Día Bloqueado");
+        document.getElementById("fechaEspecial").value = "";
+        document.getElementById("bloqueoMotivo").value = "";
         cargarDiasEspeciales();
     }
 }

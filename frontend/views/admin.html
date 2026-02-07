@@ -4,13 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Admin - Gestión de Turnos</title>
-    <link rel="stylesheet" href="/assets/css/styles.css">
+    <link rel="stylesheet" href="/assets/css/admin.css">
 </head>
 <body>
 
     <h1>🔐 Panel Administrativo</h1>
-
-    <div style="width: 100%; max-width: 500px; margin: 20px 0;">
+    <div style="width: 100%; max-width: 500px; margin: 15px 0;">
         <button onclick="logout()" style="background: #ef4444;">Cerrar sesión</button>
     </div>
 
@@ -35,30 +34,6 @@
     </div>
 
     <div class="config-container">
-        <h3>🔍 Buscar Turnos</h3>
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        <input type="text" id="buscarNombre" placeholder="Nombre del cliente..." style="flex:2;">
-        <input type="date" id="buscarFecha" style="flex:1;">
-        <button onclick="cargarTurnos()">Buscar</button>
-        </div>
-        <div class="admin-container">
-        <h2>📅 Turnos Solicitados</h2>
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th><th>Cliente</th><th>Fecha</th><th>Hora</th><th>Estado</th><th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="tablaTurnos"></tbody>
-            </table>
-        </div>
-    </div>
-    </div>
-
-
-
-    <div class="config-container">
         <h3>💇‍♂️ Servicios</h3>
         <form id="formNuevoServicio" style="display:flex; gap:10px; margin-bottom:20px;">
             <input type="text" id="servNombre" placeholder="Nombre" required>
@@ -76,7 +51,7 @@
         <h3>🚫 Bloquear Día</h3>
         <div style="display:flex; gap:10px; margin-bottom:15px;">
             <input type="date" id="fechaEspecial">
-            <input type="text" id="descEspecial" placeholder="Motivo">
+            <input type="text" id="bloqueoMotivo" placeholder="Ej: Feriado / Capacitación" required>
             <button onclick="agregarDiaEspecial()">Bloquear</button>
         </div>
         <div class="table-container">
@@ -84,6 +59,29 @@
                 <tbody id="listaDiasEspeciales"></tbody>
             </table>
         </div>
+    </div>
+
+
+     <div class="config-container">
+        <h3>🔍 Buscar Turnos</h3>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <input type="text" id="buscarNombre" placeholder="Nombre del cliente..." style="flex:2;">
+        <input type="date" id="buscarFecha" style="flex:1;">
+        <button onclick="cargarTurnos()">Buscar</button>
+        </div>
+         <br>
+        <div class="admin-container">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th><th>Cliente</th><th>Fecha</th><th>Hora</th><th>Estado</th><th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaTurnos"></tbody>
+            </table>
+        </div>
+    </div>
     </div>
 
     <div id="modalExito" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 99999;">
