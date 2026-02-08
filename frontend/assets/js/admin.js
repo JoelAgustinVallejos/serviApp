@@ -1,15 +1,14 @@
 const API_URL = "http://localhost:3000/admin";
 
-// Verificar rol apenas carga la página para seguridad visual
-document.addEventListener("DOMContentLoaded", () => {
+// 1. PROTECCIÓN DE RUTA
+(function() {
     const user = JSON.parse(localStorage.getItem("usuario"));
     if (!user || user.rol !== 'admin') {
-        alert("Acceso restringido: Inicia sesión como administrador");
-        window.location.href = "login.html";
-        return;
+        window.location.href = "login.html"; 
     }
+})();
 
-    // Si es admin, cargar todo
+document.addEventListener("DOMContentLoaded", () => {
     cargarConfiguracion();
     cargarTurnos();
     cargarServiciosAdmin();
@@ -18,7 +17,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("formNuevoServicio").addEventListener("submit", agregarServicio);
 });
 
-// --- FUNCIÓN CLAVE: Genera los headers con el ROL ---
 function getAdminHeaders() {
     const user = JSON.parse(localStorage.getItem("usuario"));
     return {
@@ -27,34 +25,86 @@ function getAdminHeaders() {
     };
 }
 
-// --- GESTIÓN DE TURNOS ---
 async function cargarTurnos() {
     const nom = document.getElementById("buscarNombre").value;
     const fec = document.getElementById("buscarFecha").value;
     
     try {
         const res = await fetch(`${API_URL}/turnos?nombre=${nom}&fecha=${fec}`, {
-            headers: getAdminHeaders() //
+            headers: getAdminHeaders()
         });
         
         if (res.status === 403) return window.location.href = "login.html";
 
         const turnos = await res.json();
+        
+        // --- LLAMADA A ESTADÍSTICAS ---
+        actualizarEstadisticas(turnos); 
+
         const tabla = document.getElementById("tablaTurnos");
-        tabla.innerHTML = turnos.map(t => `
-            <tr>
-                <td>${t.id}</td>
-                <td>${t.nombre}</td>
-                <td>${t.fecha.split('T')[0]}</td>
-                <td>${t.hora.slice(0, 5)} hs</td>
-                <td>${t.estado.toUpperCase()}</td>
-                <td>
-                    <button onclick="cambiarEstado(${t.id}, 'confirmado')" style="cursor:pointer;">✓</button>
-                    <button onclick="eliminarTurno(${t.id})" style="cursor:pointer;">✕</button>
-                </td>
-            </tr>
-        `).join('');
+
+        tabla.innerHTML = turnos.map(t => {
+            let colorEstado = '#f59e0b'; // Naranja (Pendiente)
+            if (t.estado === 'confirmado') colorEstado = '#22c55e'; // Verde
+            if (t.estado === 'cancelado') colorEstado = '#ef4444';  // Rojo
+
+            const botones = t.estado !== 'cancelado' 
+                ? `<button onclick="cambiarEstado(${t.id}, 'confirmado')" title="Confirmar">✓</button>
+                   <button onclick="cancelarTurno(${t.id})" title="Cancelar">✕</button>`
+                : `<span style="color:gray; font-style:italic;">Cancelado</span>`;
+
+            return `
+                <tr>
+                    <td>${t.id}</td>
+                    <td>${t.nombre}</td>
+                    <td>${t.fecha.split('T')[0]}</td>
+                    <td>${t.hora.slice(0, 5)} hs</td>
+                    <td><strong style="color: ${colorEstado}">${t.estado.toUpperCase()}</strong></td>
+                    <td>${botones}</td>
+                </tr>`;
+        }).join('');
     } catch (e) { console.error("Error turnos:", e); }
+}
+
+function actualizarEstadisticas(turnos) {
+    // Obtenemos la fecha de hoy en formato local YYYY-MM-DD
+    const hoy = new Date();
+    const hoyStr = hoy.getFullYear() + '-' + 
+                   String(hoy.getMonth() + 1).padStart(2, '0') + '-' + 
+                   String(hoy.getDate()).padStart(2, '0');
+    
+    console.log("Fecha de hoy para comparar:", hoyStr); 
+
+    // Filtramos turnos de hoy que NO estén cancelados
+    const turnosHoy = turnos.filter(t => {
+        const fechaTurno = t.fecha.split('T')[0]; 
+        return fechaTurno === hoyStr && t.estado !== 'cancelado';
+    });
+    
+    const confirmados = turnosHoy.filter(t => t.estado === 'confirmado').length;
+    const pendientes = turnosHoy.filter(t => t.estado === 'pendiente').length;
+
+    // CAPTURAMOS LOS ELEMENTOS
+    const elHoy = document.getElementById("statHoy");
+    const elConf = document.getElementById("statConfirmados");
+    const elPend = document.getElementById("statPendientes"); // <--- NOMBRE CORREGIDO
+
+    // ASIGNAMOS LOS VALORES (Con nombres parejos)
+    if(elHoy) elHoy.innerText = turnosHoy.length;
+    if(elConf) elConf.innerText = confirmados;
+    if(elPend) elPend.innerText = pendientes; // <--- AQUÍ ESTABA EL ERROR
+}
+async function cancelarTurno(id) {
+    if (!confirm("¿Seguro que quieres cancelar este turno? La hora se liberará.")) return;
+    const res = await fetch(`${API_URL}/turnos/${id}/estado`, {
+        method: "PUT",
+        headers: getAdminHeaders(),
+        body: JSON.stringify({ estado: 'cancelado' })
+    });
+    if (res.ok) {
+        lanzarExito("Turno Cancelado");
+        cargarTurnos();
+    }
 }
 
 async function cambiarEstado(id, estado) {
@@ -69,34 +119,32 @@ async function cambiarEstado(id, estado) {
     }
 }
 
-async function eliminarTurno(id) {
-    if(!confirm("¿Deseas eliminar este turno?")) return;
-    const res = await fetch(`${API_URL}/turnos/${id}`, { 
-        method: "DELETE",
-        headers: getAdminHeaders() 
-    });
-    if (res.ok) {
-        lanzarExito("Turno Eliminado");
-        cargarTurnos();
-    }
-}
-
-// --- CONFIGURACIÓN ---
 async function cargarConfiguracion() {
     try {
-        const res = await fetch(`${API_URL}/config`, { headers: getAdminHeaders() });
-        if (res.status === 403) return;
+        const res = await fetch(`${API_URL}/config`, {
+            headers: getAdminHeaders()
+        });
+        
+        if (!res.ok) {
+            console.error("Error al obtener la configuración del servidor");
+            return;
+        }
 
         const config = await res.json();
-        if (config) {
+        
+        // 🛡️ VALIDACIÓN: Solo intentamos poner valores si config existe
+        if (config && config.hora_inicio && config.hora_fin) {
             document.getElementById("horaInicio").value = config.hora_inicio.slice(0, 5);
             document.getElementById("horaFin").value = config.hora_fin.slice(0, 5);
+            
             const dias = JSON.parse(config.dias_laborales || "[]");
             document.querySelectorAll('.day-checkbox').forEach(cb => {
                 cb.checked = dias.includes(parseInt(cb.value));
             });
         }
-    } catch (e) { console.error("Error config:", e); }
+    } catch (e) { 
+        console.error("Error config en admin:", e); 
+    }
 }
 
 async function guardarConfiguracion() {
@@ -112,7 +160,6 @@ async function guardarConfiguracion() {
     if (res.ok) lanzarExito("Configuración Guardada");
 }
 
-// --- SERVICIOS ---
 async function cargarServiciosAdmin() {
     const res = await fetch(`${API_URL}/servicios`, { headers: getAdminHeaders() });
     if (!res.ok) return;
@@ -123,21 +170,18 @@ async function cargarServiciosAdmin() {
             <td style="color:black; padding:10px;">${s.nombre}</td>
             <td style="color:black; padding:10px;">$${s.precio}</td>
             <td><button onclick="eliminarServicio(${s.id})" style="background:none; border:none; cursor:pointer;">❌</button></td>
-        </tr>
-    `).join('');
+        </tr>`).join('');
 }
 
 async function agregarServicio(e) {
     e.preventDefault();
     const nombre = document.getElementById("servNombre").value;
     const precio = document.getElementById("servPrecio").value;
-
     const res = await fetch(`${API_URL}/servicios`, {
         method: "POST",
         headers: getAdminHeaders(),
         body: JSON.stringify({ nombre, precio })
     });
-
     if (res.ok) {
         lanzarExito("Servicio Creado");
         e.target.reset();
@@ -156,43 +200,30 @@ async function eliminarServicio(id) {
     }
 }
 
-// --- DÍAS ESPECIALES (BLOQUEOS) ---
 async function cargarDiasEspeciales() {
     try {
         const res = await fetch(`${API_URL}/dias-especiales`, { headers: getAdminHeaders() });
-        
-        // Si hay error de permisos, detenemos la ejecución
-        if (!res.ok) throw new Error("No autorizado");
-
+        if (!res.ok) return;
         const dias = await res.json();
         const lista = document.getElementById("listaDiasEspeciales");
-        
-        // Ahora dias será un array válido y map funcionará
         lista.innerHTML = dias.map(d => `
             <tr>
                 <td style="color:black; padding:10px;">${d.fecha.split('T')[0]}</td>
                 <td style="color:black; padding:10px;">${d.descripcion}</td>
                 <td><button onclick="eliminarDiaEspecial(${d.id})" style="background:none; border:none; cursor:pointer;">❌</button></td>
-            </tr>
-        `).join('');
-    } catch (e) { 
-        console.error("Error días especiales:", e);
-        document.getElementById("listaDiasEspeciales").innerHTML = "";
-    }
+            </tr>`).join('');
+    } catch (e) { console.error(e); }
 }
 
 async function agregarDiaEspecial() {
     const fecha = document.getElementById("fechaEspecial").value;
-    const descripcion = document.getElementById("bloqueoMotivo").value; // Nombre corregido según admin.html
-    
+    const descripcion = document.getElementById("bloqueoMotivo").value; 
     if(!fecha || !descripcion) return; 
-
     const res = await fetch(`${API_URL}/dias-especiales`, {
         method: "POST",
         headers: getAdminHeaders(),
         body: JSON.stringify({ fecha, descripcion })
     });
-    
     if (res.ok) {
         lanzarExito("Día Bloqueado");
         document.getElementById("fechaEspecial").value = "";
@@ -202,17 +233,13 @@ async function agregarDiaEspecial() {
 }
 
 async function eliminarDiaEspecial(id) {
-    const res = await fetch(`${API_URL}/dias-especiales/${id}`, { 
-        method: "DELETE", 
-        headers: getAdminHeaders() 
-    });
+    const res = await fetch(`${API_URL}/dias-especiales/${id}`, { method: "DELETE", headers: getAdminHeaders() });
     if (res.ok) {
         lanzarExito("Día Desbloqueado");
         cargarDiasEspeciales();
     }
 }
 
-// --- UTILIDADES ---
 function lanzarExito(t) {
     const modal = document.getElementById("modalExito");
     const txt = document.getElementById("modalTxt");

@@ -210,3 +210,9 @@ tr:hover td {
     th:nth-child(5) { width: 15%; } /* Estado */
     th:nth-child(6) { width: 20%; } /* Acción */
 }
+
+/* Esto es opcional, agrégalo a tu CSS si quieres */
+tr:has(strong[style*="rgb(239, 68, 68)"]) {
+    background-color: #fff1f1;
+    opacity: 0.8;
+}

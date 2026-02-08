@@ -37,36 +37,30 @@ async function cargarServicios() {
     } catch (e) { console.error(e); }
 }
 
-// --- FUNCIÓN MODIFICADA PARA VALIDAR DÍAS LABORALES ---
 async function cargarDisponibilidad(fecha) {
     try {
-        // 1. OBTENER CONFIGURACIÓN DE DÍAS LABORALES PRIMERO
+        // 1. Obtener configuración (Ruta pública)
         const resConfig = await fetch("http://localhost:3000/admin/config");
+        if (!resConfig.ok) throw new Error("Error al obtener configuración");
         const config = await resConfig.json();
         
-        // Convertimos la fecha a un objeto para saber qué día de la semana es (0-6)
         const fechaObj = new Date(fecha + "T00:00:00");
         const diaSemana = fechaObj.getDay(); 
-        
-        // Parseamos los días laborales guardados en el admin
         const diasPermitidos = JSON.parse(config.dias_laborales || "[]");
 
-        const contenedor = document.getElementById("contenedorHoras");
-        const inputHora = document.getElementById("hora");
-        contenedor.innerHTML = ""; 
+        contenedorHoras.innerHTML = ""; 
 
-        // 2. VALIDACIÓN: Si el día no está en la configuración, mostramos mensaje y cortamos
+        // 2. Validación de días laborales
         if (!diasPermitidos.includes(diaSemana)) {
-            contenedor.innerHTML = "<p style='color:red; font-weight:bold;'>Cerrado: Este día no es laboral.</p>";
+            contenedorHoras.innerHTML = "<p style='color:red; font-weight:bold;'>Cerrado: Este día no es laboral.</p>";
             return;
         }
 
-        // 3. SI EL DÍA ES VÁLIDO, CARGAMOS LAS HORAS DISPONIBLES COMO ANTES
         const res = await fetch(`http://localhost:3000/appointments/disponibilidad?fecha=${fecha}`);
         const data = await res.json();
 
         if (data.length === 0) {
-            contenedor.innerHTML = "<p>Cerrado o sin turnos para esta fecha.</p>";
+            contenedorHoras.innerHTML = "<p>Cerrado o sin turnos para esta fecha.</p>";
             return;
         }
 
@@ -81,18 +75,17 @@ async function cargarDisponibilidad(fecha) {
                     const todos = document.querySelectorAll(".hora-item");
                     todos.forEach(el => el.classList.remove("selected"));
                     this.classList.add("selected");
-                    inputHora.value = item.hora;
+                    // 🛡️ USAMOS LA VARIABLE GLOBAL DEFINIDA AL PRINCIPIO DEL ARCHIVO
+                    horaInputHidden.value = item.hora; 
                 };
             } else {
                 div.classList.add("ocupado");
                 div.style.opacity = "0.4";
                 div.style.cursor = "not-allowed";
             }
-            contenedor.appendChild(div);
+            contenedorHoras.appendChild(div);
         });
-    } catch (e) {
-        console.error("Error disponibilidad:", e);
-    }
+    } catch (e) { console.error("Error disponibilidad:", e); }
 }
 
 async function cargarMisTurnos() {
@@ -120,10 +113,11 @@ async function cargarMisTurnos() {
 }
 
 async function eliminarTurno(id) {
+    if (!confirm("¿Deseas cancelar este turno?")) return;
     const res = await fetch(`http://localhost:3000/appointments/${id}`, { method: "DELETE" });
     if (res.ok) {
         lanzarExito("Turno Cancelado");
-        cargarMisTurnos(); // Corregido el nombre de la función que tenía un guion bajo extra
+        cargarMisTurnos(); 
     }
 }
 
@@ -162,5 +156,8 @@ form.onsubmit = async (e) => {
         form.reset();
         form.querySelector("button").innerText = "RESERVAR TURNO";
         cargarMisTurnos();
+    } else {
+        const errorData = await res.json();
+        alert(errorData.error || "Error al procesar el turno");
     }
 };

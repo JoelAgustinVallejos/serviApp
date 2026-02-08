@@ -2,19 +2,16 @@ const express = require("express");
 const router = express.Router();
 const { getDB } = require("../db");
 
+// 🛡️ MIDDLEWARE DE SEGURIDAD
 function esAdmin(req, res, next) {
-    // Leemos el rol desde los headers de la petición
     const rol = req.headers['x-role']; 
-    
     if (rol === 'admin') {
-        return next(); // El rol es correcto, pasamos a la función siguiente
+        return next(); 
     }
-    
-    // Si no es admin, cortamos la comunicación aquí
     res.status(403).json({ error: "Acceso denegado: Se requieren permisos de administrador" });
 }
 
-// OBTENER TURNOS
+// TURNOS
 router.get("/turnos", esAdmin, async (req, res) => {
     try {
         const db = getDB();
@@ -28,7 +25,25 @@ router.get("/turnos", esAdmin, async (req, res) => {
     } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-// SERVICIOS: GET, POST Y DELETE (Corregido)
+router.put("/turnos/:id/estado", esAdmin, async (req, res) => {
+    try {
+        const db = getDB();
+        await db.execute("UPDATE turnos SET estado = ? WHERE id = ?", [req.body.estado, req.params.id]);
+        res.json({ status: "ok" });
+    } catch (error) { res.status(500).json({ error: error.message }); }
+});
+
+router.put("/turnos/:id/cancelar", esAdmin, async (req, res) => {
+    try {
+        const db = getDB();
+        await db.execute("UPDATE turnos SET estado = 'cancelado' WHERE id = ?", [req.params.id]);
+        res.json({ status: "ok", message: "Turno marcado como cancelado" });
+    } catch (error) { 
+        res.status(500).json({ error: error.message }); 
+    }
+});
+
+// SERVICIOS
 router.get("/servicios", esAdmin, async (req, res) => {
     try {
         const db = getDB();
@@ -54,15 +69,18 @@ router.delete("/servicios/:id", esAdmin, async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Error al eliminar servicio" }); }
 });
 
-// CONFIGURACIÓN (Corregido)
-router.get("/config", esAdmin, async (req, res) => {
+// CONFIGURACIÓN
+router.get("/config", async (req, res) => {
     try {
         const db = getDB();
         const [rows] = await db.execute("SELECT * FROM configuracion WHERE id = 1");
         res.json(rows[0]);
-    } catch (error) { res.status(500).json({ error: error.message }); }
+    } catch (error) { 
+        res.status(500).json({ error: error.message }); 
+    }
 });
 
+// 🛡️ Mantenemos 'esAdmin' en el POST porque solo el jefe puede cambiar horarios
 router.post("/config", esAdmin, async (req, res) => {
     try {
         const db = getDB();
@@ -94,24 +112,6 @@ router.delete("/dias-especiales/:id", esAdmin, async (req, res) => {
     try {
         const db = getDB();
         await db.execute("DELETE FROM dias_especiales WHERE id = ?", [req.params.id]);
-        res.json({ status: "ok" });
-    } catch (error) { res.status(500).json({ error: error.message }); }
-});
-
-// ACTUALIZAR ESTADO
-router.put("/turnos/:id/estado", esAdmin, async (req, res) => {
-    try {
-        const db = getDB();
-        await db.execute("UPDATE turnos SET estado = ? WHERE id = ?", [req.body.estado, req.params.id]);
-        res.json({ status: "ok" });
-    } catch (error) { res.status(500).json({ error: error.message }); }
-});
-
-// ELIMINAR TURNO
-router.delete("/turnos/:id", esAdmin, async (req, res) => {
-    try {
-        const db = getDB();
-        await db.execute("DELETE FROM turnos WHERE id = ?", [req.params.id]);
         res.json({ status: "ok" });
     } catch (error) { res.status(500).json({ error: error.message }); }
 });
