@@ -37,14 +37,33 @@ async function cargarServicios() {
     } catch (e) { console.error(e); }
 }
 
+// --- FUNCIÓN MODIFICADA PARA VALIDAR DÍAS LABORALES ---
 async function cargarDisponibilidad(fecha) {
     try {
-        const res = await fetch(`http://localhost:3000/appointments/disponibilidad?fecha=${fecha}`);
-        const data = await res.json();
+        // 1. OBTENER CONFIGURACIÓN DE DÍAS LABORALES PRIMERO
+        const resConfig = await fetch("http://localhost:3000/admin/config");
+        const config = await resConfig.json();
+        
+        // Convertimos la fecha a un objeto para saber qué día de la semana es (0-6)
+        const fechaObj = new Date(fecha + "T00:00:00");
+        const diaSemana = fechaObj.getDay(); 
+        
+        // Parseamos los días laborales guardados en el admin
+        const diasPermitidos = JSON.parse(config.dias_laborales || "[]");
+
         const contenedor = document.getElementById("contenedorHoras");
         const inputHora = document.getElementById("hora");
-        
         contenedor.innerHTML = ""; 
+
+        // 2. VALIDACIÓN: Si el día no está en la configuración, mostramos mensaje y cortamos
+        if (!diasPermitidos.includes(diaSemana)) {
+            contenedor.innerHTML = "<p style='color:red; font-weight:bold;'>Cerrado: Este día no es laboral.</p>";
+            return;
+        }
+
+        // 3. SI EL DÍA ES VÁLIDO, CARGAMOS LAS HORAS DISPONIBLES COMO ANTES
+        const res = await fetch(`http://localhost:3000/appointments/disponibilidad?fecha=${fecha}`);
+        const data = await res.json();
 
         if (data.length === 0) {
             contenedor.innerHTML = "<p>Cerrado o sin turnos para esta fecha.</p>";
@@ -57,20 +76,11 @@ async function cargarDisponibilidad(fecha) {
             div.innerText = item.hora;
 
             if (item.disponible) {
-                // Forzamos el estilo de cursor para que sepa que es cliqueable
                 div.style.cursor = "pointer";
-
                 div.onclick = function() {
-                    console.log("Hora seleccionada:", item.hora); // Para debug
-                    
-                    // 1. Quitar clase 'selected' de todos
                     const todos = document.querySelectorAll(".hora-item");
                     todos.forEach(el => el.classList.remove("selected"));
-                    
-                    // 2. Agregar clase al actual
                     this.classList.add("selected");
-                    
-                    // 3. Guardar en el input hidden
                     inputHora.value = item.hora;
                 };
             } else {
@@ -113,7 +123,7 @@ async function eliminarTurno(id) {
     const res = await fetch(`http://localhost:3000/appointments/${id}`, { method: "DELETE" });
     if (res.ok) {
         lanzarExito("Turno Cancelado");
-        cargarMis_Turnos();
+        cargarMisTurnos(); // Corregido el nombre de la función que tenía un guion bajo extra
     }
 }
 

@@ -60,6 +60,7 @@ h2, h3 {
     text-align: center;
     color: #0f172a;
     font-weight: 800;
+    font-size: 25px;
     margin-bottom: 10px;
 }
 
@@ -190,15 +191,22 @@ tr:hover td {
     width: 360px;
 }
 
-/* 8. RESPONSIVE */
-@media (max-width: 600px) {
-    body {
-        padding: 10px;
-    }
-    
-    #formTurno, .table-container {
-        padding: 15px;
+@media (min-width: 1024px) {
+    table {
+        width: 100%;
+        table-layout: fixed; /* Ayuda a que las columnas tengan tamaños proporcionales */
     }
 
-    h2 { font-size: 1.5rem; }
+    th, td {
+        padding: 20px; /* Más espacio interno para pantallas grandes */
+        text-align: center; /* Centrar contenido para mejor legibilidad en ancho total */
+    }
+
+    /* Ajuste de anchos específicos por columna */
+    th:nth-child(1) { width: 20%; } /* Nombre */
+    th:nth-child(2) { width: 15%; } /* Servicio */
+    th:nth-child(3) { width: 15%; } /* Fecha */
+    th:nth-child(4) { width: 15%; } /* Hora */
+    th:nth-child(5) { width: 15%; } /* Estado */
+    th:nth-child(6) { width: 20%; } /* Acción */
 }

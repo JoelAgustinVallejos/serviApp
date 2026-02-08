@@ -62,8 +62,8 @@ h3 {
 label {
     display: block;
     font-weight: 600;
-    margin-bottom: 8px;
-    font-size: 0.9rem;
+    margin-bottom: 15px;
+    font-size: 16px;
 }
 
 input, select {
