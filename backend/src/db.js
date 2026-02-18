@@ -13,21 +13,32 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
-// Función para probar la conexión al iniciar
+// Función para probar la conexión al iniciar con reintentos para Docker
 async function initDB() { 
-  try {
-    // Intentamos obtener una conexión para validar que los datos del .env son correctos
-    const connection = await pool.getConnection();
-    console.log("✅ Conectado a MySQL exitosamente");
-    connection.release();
-  } catch (error) {
-    console.error("❌ Error al conectar a la DB. Revisa tu archivo .env:", error.message);
-    throw error;
-  }
+    let retries = 5; 
+    while (retries) {
+        try {
+            const connection = await pool.getConnection();
+            console.log("✅ Conectado a MySQL exitosamente");
+            connection.release();
+            break; 
+        } catch (error) {
+            retries -= 1;
+            console.log(`❌ Error de conexión (MySQL iniciando...). Reintentando en 5s... (${retries} intentos restantes)`);
+            
+            if (retries === 0) {
+                console.error("❌ No se pudo conectar a la DB tras varios intentos. Revisa tu .env y que el contenedor 'db' esté corriendo.");
+                throw error;
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, 5000));
+        }
+    }
 }
 
+// ESTA ES LA FUNCIÓN QUE FALTABA
 function getDB() {
-  return pool;
+    return pool;
 }
 
 module.exports = { initDB, getDB };

@@ -1,12 +1,16 @@
 FROM node:18
+
 WORKDIR /app
 
+# Copiamos dependencias primero para optimizar velocidad de construcción
 COPY backend/package*.json ./backend/
-WORKDIR /app/backend
-RUN npm install
+RUN cd backend && npm install
 
-WORKDIR /app
+# Copiamos TODO el proyecto (frontend y backend) para que Express vea ambos
 COPY . .
 
 EXPOSE 3000
-CMD ["node", "backend/index.js"]
+
+# Nos posicionamos en backend para ejecutar el servidor
+WORKDIR /app/backend
+CMD ["npm", "start"]

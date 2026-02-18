@@ -1,33 +1,26 @@
 services:
-  backend:
-    build: 
-      context: .
-      dockerfile: backend/Dockerfile
-    ports:
-      - "3000:3000"
-    volumes:
-      - .:/app
-      - /app/backend/node_modules
-    depends_on:
-      db:
-        condition: service_healthy
-
   db:
-    image: mysql:8
+    image: mysql:8.0
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: turnos 
+      # Estos valores deben coincidir con tu archivo backend/.env
+      MYSQL_ROOT_PASSWORD: root 
+      MYSQL_DATABASE: turnos
     ports:
       - "3306:3306"
     volumes:
-      - ./backend/database/database.sql:/docker-entrypoint-initdb.d/init.sql
-      - mysql_data:/var/lib/mysql 
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      # Esto carga automáticamente tu base de datos al iniciar el contenedor
+      - ./backend/database/database.sql:/docker-entrypoint-initdb.d/setup.sql
 
-volumes:
-  mysql_data:
+  backend:
+    build:
+      # Contexto en la raíz para que el backend pueda acceder a la carpeta /frontend
+      context: .          
+      # Ruta específica al Dockerfile que está dentro de la carpeta backend
+      dockerfile: ./backend/Dockerfile 
+    ports:
+      - "3000:3000"
+    env_file: 
+      - ./backend/.env
+    depends_on:
+      - db
